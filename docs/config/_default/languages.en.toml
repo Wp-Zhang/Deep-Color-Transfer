@@ -14,7 +14,7 @@ dateFormat = "2 January 2006"
 
 [author]
   name = "Deep Color Transfer"
-  image = "img/blowfish_logo.png"
+  image = "img/logo.png"
   headline = "Weipeng Zhang, Yubing Gou"
   bio = "A course project of CS7150 at Northeastern University, MA."
   links = [

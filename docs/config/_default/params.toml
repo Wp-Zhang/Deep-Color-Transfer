@@ -16,8 +16,8 @@ enableCodeCopy = true
 # robots = ""
 
 [footer]
-  showCopyright = true
-  showThemeAttribution = true
+  showCopyright = false
+  showThemeAttribution = false
   showAppearanceSwitcher = true
   showScrollToTop = true
 
