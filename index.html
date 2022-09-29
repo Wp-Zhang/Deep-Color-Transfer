@@ -406,29 +406,22 @@
         </div>
     </header>
     <section class="prose dark:prose-invert"><p>In this project, we are trying to build a deep learning model for color transfer between images.</p>
+<p>Early color transfer approaches change colors of a source image based on the global color distribution of a reference image. Some methods perform color transfer by matching the means and standard deviations of source to reference images while others explore color mapping between source and reference images leveraging probability density functions of colors. These conventional approaches, however, may fail to reflect semantic correspondence because they do not consider any spatial information. To handle the limitation of global color transfer, several approaches contemplate local correspondences between source and reference images. While these approaches solve the problem of global color transfer in the case that source and reference images have similar structures, they may fail when both images have totally irrelevant contents and styles.</p>
 <p>
 
 
 
-  
-  
-    
-  
-  
-    <figure>
-      <img
-        class="my-0 rounded-md"
-        srcset="
-          /Deep-Color-Transfer/img/demo_hu8ad55936e15742a1bf655369d4699437_9825309_330x0_resize_box.gif 330w,
-          /Deep-Color-Transfer/img/demo_hu8ad55936e15742a1bf655369d4699437_9825309_660x0_resize_box.gif 660w,
-          /Deep-Color-Transfer/img/demo_hu8ad55936e15742a1bf655369d4699437_9825309_1024x0_resize_box.gif 1024w,
-          /Deep-Color-Transfer/img/demo_hu8ad55936e15742a1bf655369d4699437_9825309_1320x0_resize_box.gif 2x"
-        src="/Deep-Color-Transfer/img/demo_hu8ad55936e15742a1bf655369d4699437_9825309_660x0_resize_box.gif"
-        alt="demo"
-      />
-      <figcaption>Fig. 1 Demo of Deep Color Transfer Using Histogram Analogy.</figcaption>
-    </figure>
-  
+
+
+
+
+
+<figure>
+  <img class="my-0 rounded-md" srcset='
+          /Deep-Color-Transfer/img/demo_hu7fcf9757381e26c8c20a0ede175a1100_5757150_330x0_resize_box.gif 330w,
+          /Deep-Color-Transfer/img/demo_hu7fcf9757381e26c8c20a0ede175a1100_5757150_660x0_resize_box.gif 660w' src="/Deep-Color-Transfer/img/demo_hu7fcf9757381e26c8c20a0ede175a1100_5757150_660x0_resize_box.gif" alt="demo" />
+  <figcaption>Fig. 1 Demo of Deep Color Transfer Using Histogram Analogy.</figcaption>
+</figure>
 
 </p>
 <p>The authors of <em><strong>Deep Color Transfer Using Histogram Analogy</strong></em><a href="/Deep-Color-Transfer/#ref1">[1]</a> proposed a deep learning framework that leverages color histogram analogy for color transfer between source and reference images (Fig. 1). The framework consists of two networks, a Histogram Encoding Network (HEN) and a Color Transfer Network (CTN) (Fig. 2). HEN extracts encoded information from the histograms of source and reference images, which is fed into CTN to guide the color transfer process. Although a histogram is a simple and global representation of image colors, convolutional neural networks with encoded histograms can conditionally transfer the colors of reference images to source images. For strongly relevant and irrelevant cases, the same histogram information is used for all parts of the source image, and this is the default setting. When semantic object information is important, as in the case of weak relevance, semantic image segmentation is used and the histogram analogy is extracted and applied for corresponding semantic regions between source and reference images.</p>
@@ -436,29 +429,21 @@
 
 
 
-  
-  
-    
-  
-  
-    <figure>
-      <img
-        class="my-0 rounded-md"
-        srcset="
-          /Deep-Color-Transfer/img/model_structure_hud2eedc36b71fa9458f1813b01def489b_1005512_330x0_resize_box_3.png 330w,
-          /Deep-Color-Transfer/img/model_structure_hud2eedc36b71fa9458f1813b01def489b_1005512_660x0_resize_box_3.png 660w,
-          /Deep-Color-Transfer/img/model_structure_hud2eedc36b71fa9458f1813b01def489b_1005512_1024x0_resize_box_3.png 1024w,
-          /Deep-Color-Transfer/img/model_structure_hud2eedc36b71fa9458f1813b01def489b_1005512_1320x0_resize_box_3.png 2x"
-        src="/Deep-Color-Transfer/img/model_structure_hud2eedc36b71fa9458f1813b01def489b_1005512_660x0_resize_box_3.png"
-        alt="model structure"
-      />
-      <figcaption>Fig. 2 Network architecture.</figcaption>
-    </figure>
-  
+
+
+
+
+
+<figure>
+  <img class="my-0 rounded-md" srcset='
+          /Deep-Color-Transfer/img/model_structure_huee173a026fb00c3f076933d8e7f4bbdd_250232_330x0_resize_box_3.png 330w,
+          /Deep-Color-Transfer/img/model_structure_huee173a026fb00c3f076933d8e7f4bbdd_250232_660x0_resize_box_3.png 660w' src="/Deep-Color-Transfer/img/model_structure_huee173a026fb00c3f076933d8e7f4bbdd_250232_660x0_resize_box_3.png" alt="model structure" />
+  <figcaption>Fig. 2 Network architecture.</figcaption>
+</figure>
 
 </p>
 <p>As the authors did in <a href="/Deep-Color-Transfer/#ref1">[1]</a>, we’ll train our model on a paired dataset constructed from the MIT-Adobe 5K dataset<a href="/Deep-Color-Transfer/#ref2">[2]</a> which consists of six sets, each of which contains 5,000 images. In the dataset, the first set contains the original images and the other five sets contain color varied images of the original images retouched by five different experts. The paired dataset enables the model to learn to transfer color into natural-looking images. Since using the dataset only provides image pairs with a fixed number of combinations, we’ll also perform color augmentation by transforming the average hue and saturation of the original images to produce more diverse image pairs. In addition, as an ideally trained model must produce the output image the same as the source image if the histograms of the two images are the same, we’ll use identical source and reference image pairs to stabilize the network output.</p>
-<p>The paper this project based on was published in 2020 and it has been 2 years since that, during which many advanced vision models were proposed and have brought the scores of benchmarks to a new level. Beyond implementing the model mentioned in <a href="/Deep-Color-Transfer/#ref1">[1]</a>, we will try some SOTA semantic(or panoptic) segmentation methods to see if they could improve the performance in the case of weak relevance between the source image and the reference image.
+<p>The paper this project bases on was published in 2020 and it has been 2 years since that, during which many advanced vision models were proposed and have brought the scores of benchmarks to a new level. Beyond implementing the model mentioned in <a href="/Deep-Color-Transfer/#ref1">[1]</a>, we will try some SOTA semantic(or panoptic) segmentation methods to see if they could improve the performance in the case of weak relevance between the source image and the reference image.
 Image transformers like BEiT<a href="/Deep-Color-Transfer/#ref3">[3]</a>, Swin Transformers<a href="/Deep-Color-Transfer/#ref4">[4]</a>, and MaX-DeepLab<a href="/Deep-Color-Transfer/#ref5">[5]</a> have drawn much attention recently, we will try to introduce transformers into the current framework and see if a better color transfer can be produced.</p>
 <hr>
 <h5 id="ref1" class="relative group">[1] Lee, Junyong, et al. &ldquo;Deep color transfer using histogram analogy.&rdquo; The Visual Computer 36.10 (2020): 2129-2143. <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#ref1" aria-label="Anchor">#</a></span></h5>
