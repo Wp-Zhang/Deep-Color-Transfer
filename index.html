@@ -359,35 +359,27 @@
         
   
   
-    <article
-  class="
+    <article class="
     h-full
-   flex flex-col items-center justify-center text-center"
->
-  <header class="flex flex-col items-center mb-3">
-    
-      
-      
+   flex flex-col items-center justify-center">
+    <header class="flex flex-col items-center mb-3">
         
-        <img
-          class="mb-2 rounded-full h-36 w-36"
-          width="144"
-          height="144"
-          alt="Deep Color Transfer"
-          src="/Deep-Color-Transfer/img/logo_hu28fde847bac4bc582efae019046c47ce_102961_288x288_fill_box_smart1_3.png"
-        />
-      
-    
-    <h1 class="text-4xl font-extrabold">
-      Deep Color Transfer
-    </h1>
-    
-      <h2 class="text-xl text-neutral-500 dark:text-neutral-400">
-        Weipeng Zhang, Yubing Gou
-      </h2>
-    
-    <div class="mt-1 text-2xl">
-      
+        
+        
+        
+        <img class="mb-2 rounded-full h-36 w-36" width="144" height="144" alt="Deep Color Transfer" src="/Deep-Color-Transfer/img/logo_hu28fde847bac4bc582efae019046c47ce_102961_288x288_fill_box_smart1_3.png" />
+        
+        
+        <h1 class="text-4xl font-extrabold">
+            Deep Color Transfer
+        </h1>
+        
+        <h2 class="text-xl text-neutral-500 dark:text-neutral-400">
+            Weipeng Zhang, Yubing Gou
+        </h2>
+        
+        <div class="mt-1 text-2xl">
+            
   <div class="flex flex-wrap text-neutral-400 dark:text-neutral-500">
     
       
@@ -411,23 +403,92 @@
   </div>
 
 
-    </div>
-  </header>
-  <section class="prose dark:prose-invert"><h2 id="what-is-the-model-or-models-you-are-implementing" class="relative group">What is the model (or models) you are implementing? <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#what-is-the-model-or-models-you-are-implementing" aria-label="Anchor">#</a></span></h2>
-<h2 id="what-is-the-data-can-be-real-or-synthetic-you-are-using" class="relative group">What is the data (can be real or synthetic) you are using? <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#what-is-the-data-can-be-real-or-synthetic-you-are-using" aria-label="Anchor">#</a></span></h2>
-<h2 id="what-is-the-method-or-paper-and-that-is-your-focus" class="relative group">What is the method (or paper) and that is your focus? <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#what-is-the-method-or-paper-and-that-is-your-focus" aria-label="Anchor">#</a></span></h2>
-<h2 id="what-question-will-you-try-to-answer-in-your-project" class="relative group">What question will you try to answer in your project? <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#what-question-will-you-try-to-answer-in-your-project" aria-label="Anchor">#</a></span></h2>
+        </div>
+    </header>
+    <section class="prose dark:prose-invert"><p>In this project, we are trying to build a deep learning model for color transfer between images.</p>
+<p>
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      <img
+        class="my-0 rounded-md"
+        srcset="
+          /Deep-Color-Transfer/img/demo_hu8ad55936e15742a1bf655369d4699437_9825309_330x0_resize_box.gif 330w,
+          /Deep-Color-Transfer/img/demo_hu8ad55936e15742a1bf655369d4699437_9825309_660x0_resize_box.gif 660w,
+          /Deep-Color-Transfer/img/demo_hu8ad55936e15742a1bf655369d4699437_9825309_1024x0_resize_box.gif 1024w,
+          /Deep-Color-Transfer/img/demo_hu8ad55936e15742a1bf655369d4699437_9825309_1320x0_resize_box.gif 2x"
+        src="/Deep-Color-Transfer/img/demo_hu8ad55936e15742a1bf655369d4699437_9825309_660x0_resize_box.gif"
+        alt="demo"
+      />
+      <figcaption>Fig. 1 Demo of Deep Color Transfer Using Histogram Analogy.</figcaption>
+    </figure>
+  
+
+</p>
+<p>The authors of <em><strong>Deep Color Transfer Using Histogram Analogy</strong></em><a href="/Deep-Color-Transfer/#ref1">[1]</a> proposed a deep learning framework that leverages color histogram analogy for color transfer between source and reference images (Fig. 1). The framework consists of two networks, a Histogram Encoding Network (HEN) and a Color Transfer Network (CTN) (Fig. 2). HEN extracts encoded information from the histograms of source and reference images, which is fed into CTN to guide the color transfer process. Although a histogram is a simple and global representation of image colors, convolutional neural networks with encoded histograms can conditionally transfer the colors of reference images to source images. For strongly relevant and irrelevant cases, the same histogram information is used for all parts of the source image, and this is the default setting. When semantic object information is important, as in the case of weak relevance, semantic image segmentation is used and the histogram analogy is extracted and applied for corresponding semantic regions between source and reference images.</p>
+<p>
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      <img
+        class="my-0 rounded-md"
+        srcset="
+          /Deep-Color-Transfer/img/model_structure_hud2eedc36b71fa9458f1813b01def489b_1005512_330x0_resize_box_3.png 330w,
+          /Deep-Color-Transfer/img/model_structure_hud2eedc36b71fa9458f1813b01def489b_1005512_660x0_resize_box_3.png 660w,
+          /Deep-Color-Transfer/img/model_structure_hud2eedc36b71fa9458f1813b01def489b_1005512_1024x0_resize_box_3.png 1024w,
+          /Deep-Color-Transfer/img/model_structure_hud2eedc36b71fa9458f1813b01def489b_1005512_1320x0_resize_box_3.png 2x"
+        src="/Deep-Color-Transfer/img/model_structure_hud2eedc36b71fa9458f1813b01def489b_1005512_660x0_resize_box_3.png"
+        alt="model structure"
+      />
+      <figcaption>Fig. 2 Network architecture.</figcaption>
+    </figure>
+  
+
+</p>
+<p>As the authors did in <a href="/Deep-Color-Transfer/#ref1">[1]</a>, we’ll train our model on a paired dataset constructed from the MIT-Adobe 5K dataset<a href="/Deep-Color-Transfer/#ref2">[2]</a> which consists of six sets, each of which contains 5,000 images. In the dataset, the first set contains the original images and the other five sets contain color varied images of the original images retouched by five different experts. The paired dataset enables the model to learn to transfer color into natural-looking images. Since using the dataset only provides image pairs with a fixed number of combinations, we’ll also perform color augmentation by transforming the average hue and saturation of the original images to produce more diverse image pairs. In addition, as an ideally trained model must produce the output image the same as the source image if the histograms of the two images are the same, we’ll use identical source and reference image pairs to stabilize the network output.</p>
+<p>The paper this project based on was published in 2020 and it has been 2 years since that, during which many advanced vision models were proposed and have brought the scores of benchmarks to a new level. Beyond implementing the model mentioned in <a href="/Deep-Color-Transfer/#ref1">[1]</a>, we will try some SOTA semantic(or panoptic) segmentation methods to see if they could improve the performance in the case of weak relevance between the source image and the reference image.
+Image transformers like BEiT<a href="/Deep-Color-Transfer/#ref3">[3]</a>, Swin Transformers<a href="/Deep-Color-Transfer/#ref4">[4]</a>, and MaX-DeepLab<a href="/Deep-Color-Transfer/#ref5">[5]</a> have drawn much attention recently, we will try to introduce transformers into the current framework and see if a better color transfer can be produced.</p>
+<hr>
+<h5 id="ref1" class="relative group">[1] Lee, Junyong, et al. &ldquo;Deep color transfer using histogram analogy.&rdquo; The Visual Computer 36.10 (2020): 2129-2143. <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#ref1" aria-label="Anchor">#</a></span></h5>
+<h5 id="ref2" class="relative group">[2] Bychkovsky, Vladimir, et al. &ldquo;Learning photographic global tonal adjustment with a database of input/output image pairs.&rdquo; CVPR 2011. IEEE, 2011. <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#ref2" aria-label="Anchor">#</a></span></h5>
+<h5 id="ref3" class="relative group">[3] Bao, Hangbo, Li Dong, and Furu Wei. &ldquo;Beit: Bert pre-training of image transformers.&rdquo; arXiv preprint arXiv:2106.08254 (2021). <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#ref3" aria-label="Anchor">#</a></span></h5>
+<h5 id="ref4" class="relative group">[4] Liu, Ze, et al. &ldquo;Swin transformer: Hierarchical vision transformer using shifted windows.&rdquo; Proceedings of the IEEE/CVF International Conference on Computer Vision. 2021. <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#ref4" aria-label="Anchor">#</a></span></h5>
+<h5 id="ref5" class="relative group">[5] Wang, Huiyu, et al. &ldquo;Max-deeplab: End-to-end panoptic segmentation with mask transformers.&rdquo; Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2021. <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#ref5" aria-label="Anchor">#</a></span></h5>
 </section>
 </article>
 <section>
-  
+    
 
 
 
 </section>
-
   
 
+        
+          <div
+            class="pointer-events-none absolute top-[100vh] bottom-0 w-12 ltr:right-0 rtl:left-0"
+          >
+            <a
+              href="#the-top"
+              class="pointer-events-auto sticky top-[calc(100vh-5.5rem)] flex h-12 w-12 items-center justify-center rounded-full bg-neutral/50 text-xl text-neutral-700 backdrop-blur hover:text-primary-600 dark:bg-neutral-800/50 dark:text-neutral dark:hover:text-primary-400"
+              aria-label="Scroll to top"
+              title="Scroll to top"
+            >
+              &uarr;
+            </a>
+          </div>
         
       </main><footer class="py-10 print:hidden">
   
