@@ -1,5 +1,8 @@
+# local package
+-e .
+
+# external requirements
 torchfile==0.1.0
 scikit-image==0.18.1
 opencv-python==4.5.1.48
 seaborn==0.11.1
-
