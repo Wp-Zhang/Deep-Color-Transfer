@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Deep Color Transfer</title>
+    <link>https://wp-zhang.github.io/Deep-Color-Transfer/posts/</link>
+    <description>Recent content in Posts on Deep Color Transfer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 23 Oct 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://wp-zhang.github.io/Deep-Color-Transfer/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Progress Report</title>
+      <link>https://wp-zhang.github.io/Deep-Color-Transfer/posts/progress/</link>
+      <pubDate>Sun, 23 Oct 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://wp-zhang.github.io/Deep-Color-Transfer/posts/progress/</guid>
+      <description>Conceptual Review # The authors of Deep Color Transfer Using Histogram Analogy [1] proposed a deep learning framework that leverages color histogram analogy for color transfer between source and reference images.</description>
+    </item>
+    
+    <item>
+      <title>Project Proposal</title>
+      <link>https://wp-zhang.github.io/Deep-Color-Transfer/posts/proposal/</link>
+      <pubDate>Tue, 18 Oct 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://wp-zhang.github.io/Deep-Color-Transfer/posts/proposal/</guid>
+      <description>In this project, we are trying to build a deep learning model for color transfer between images.
+Early color transfer approaches change colors of a source image based on the global color distribution of a reference image.</description>
+    </item>
+    
+  </channel>
+</rss>
