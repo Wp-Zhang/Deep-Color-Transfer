@@ -2,18 +2,6 @@ import torch.nn as nn
 from ..util import init_weights
 
 
-def HEN(
-    in_channels: int,
-    out_channels: int,
-    hidden_channels: int = 128,
-    init_method="normal",
-):
-    HEN = HistogramEncodingNetwork(in_channels, out_channels, hidden_channels).cuda()
-    init_weights(HEN, type=init_method)
-
-    return HEN
-
-
 class HistogramEncodingNetwork(nn.Module):
     """Histogram Encoding Network"""
 
@@ -121,3 +109,33 @@ class HistogramEncodingNetwork(nn.Module):
         out = x[:, None, None]  # (batch_size, 64, 1, 1)
 
         return out
+
+
+def HEN(
+    in_channels: int,
+    out_channels: int,
+    hidden_channels: int = 128,
+    init_method="Normal",
+) -> HistogramEncodingNetwork:
+    """Construct and initialize weights of a HEN
+
+    Parameters
+    ----------
+    in_channels : int
+        Number of input channels.
+    out_channels : int
+        Number of output channels.
+    hidden_channels : int, optional
+        Number of hidden channels, by default 128.
+    init_method : str, optional
+        Weight initialization method, by default "Normal"
+
+    Returns
+    -------
+    HistogramEncodingNetwork
+        An HEN
+    """
+    model = HistogramEncodingNetwork(in_channels, out_channels, hidden_channels).cuda()
+    init_weights(model, type=init_method)
+
+    return model
