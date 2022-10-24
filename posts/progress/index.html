@@ -108,7 +108,7 @@
     
     
     "mainEntityOfPage": "true",
-    "wordCount": "510"
+    "wordCount": "619"
   }]
   </script>
 
@@ -641,7 +641,7 @@
 <div class="flex flex-row flex-wrap items-center">
   
   
-  <time datetime="2022-10-23 00:00:00 &#43;0000 UTC">23 October 2022</time><span class="px-2 text-primary-500">&middot;</span><span>510 words</span><span class="px-2 text-primary-500">&middot;</span><span title="Reading time">3 mins</span>
+  <time datetime="2022-10-23 00:00:00 &#43;0000 UTC">23 October 2022</time><span class="px-2 text-primary-500">&middot;</span><span>619 words</span><span class="px-2 text-primary-500">&middot;</span><span title="Reading time">3 mins</span>
   
 
   
@@ -690,8 +690,7 @@
     [1]
 </a>, we’ll train our model on a paired dataset constructed from the MIT-Adobe 5K dataset<a href="/Deep-Color-Transfer/posts/progress/#ref2"  >
     [2]
-</a> which consists of six sets, each of which contains 5,000 images. In the dataset, the first set contains the original images and the other five sets contain color varied images of the original images retouched by five different experts. Since using the dataset only provides image pairs with a fixed number of combinations, we also follow the authors to perform color augmentation by transforming the average hue and saturation of the original images to produce more diverse image pairs. In addition, as an ideally trained model must produce the output image the same as the source image if the histograms of the two images are the same, we used identical source and reference image pairs to stabilize the network output.</p>
-<p>We implement our network on Pytorch. We use the Adam optimizer with the fixed learning rate \(5*10^{-5}\), \(\beta_1=0.5\), and
+</a> which consists of six sets, each of which contains 5,000 images. Since using the dataset only provides image pairs with a fixed number of combinations, we also follow the authors to perform color augmentation by transforming the average hue and saturation of the original images to produce more diverse image pairs. In addition, as an ideally trained model must produce the output image the same as the source image if the histograms of the two images are the same, we used identical source and reference image pairs to stabilize the network output. We implement our network on Pytorch. We use the Adam optimizer with the fixed learning rate \(5*10^{-5}\), \(\beta_1=0.5\), and
  \(\beta_2=0.999\). As we jointly train HEN and CTN, the objective function is \(L_{total} = L_{image} + \lambda_1 L_{hist} + \lambda_2 L_{multi}\), where \(L_{image}\), \(L_{hist}\) and \(L_{multi}\) are a image loss, a histogram loss, and a multi-scale loss. We used \(\lambda_1=1.5\) and \(\lambda_2=0.5\). We train the network for 100 epochs.</p>
 <h2 id="findings" class="relative group">Findings <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#findings" aria-label="Anchor">#</a></span></h2>
 <p>As the image semantic segmentation map may have a huge impact on the final output of our model, we tried several segmentaion models and finalized BEiT v2<a href="/Deep-Color-Transfer/posts/progress/#ref3"  >
@@ -714,7 +713,26 @@
 </figure>
 
 </p>
+<p>With accurate segmentation maps generated, we tested 4 sets of image pairs and the result is showed in Fig 3. When the reference image and input image have similar semantic content, the model can generate a great color transfer without being fed with segmentation maps. However, when there&rsquo;s a huge content difference, segmentation maps can help improve the model performance (see row 3). The model works well even when the reference image is just a color palette.</p>
+<p>
+
+
+
+
+
+
+
+
+<figure>
+  <img class="my-0 rounded-md" srcset='
+          /Deep-Color-Transfer/posts/progress/exp_hu5eabf6665b5cb38dc5d57103ed4528be_1738257_330x0_resize_box_3.png 330w,
+          /Deep-Color-Transfer/posts/progress/exp_hu5eabf6665b5cb38dc5d57103ed4528be_1738257_660x0_resize_box_3.png 660w' src="/Deep-Color-Transfer/posts/progress/exp_hu5eabf6665b5cb38dc5d57103ed4528be_1738257_660x0_resize_box_3.png" alt="experiment result" />
+  <figcaption>Fig. 3 Experiment results on different</figcaption>
+</figure>
+
+</p>
 <h2 id="plans" class="relative group">Plans <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#plans" aria-label="Anchor">#</a></span></h2>
+<p>The experiment we did above meets our expection. In the next few weeks, we&rsquo;ll try to change the structure of our current model and see if better results can be generated. The size of our model is relatively large right now, we&rsquo;ll also try some knowledge distillation techniques and smaller model structure like MobileNet.</p>
 <hr>
 <h5 id="ref1" class="relative group">[1] Lee, Junyong, et al. &ldquo;Deep color transfer using histogram analogy.&rdquo; The Visual Computer 36.10 (2020): 2129-2143. <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#ref1" aria-label="Anchor">#</a></span></h5>
 <h5 id="ref2" class="relative group">[2] Bychkovsky, Vladimir, et al. &ldquo;Learning photographic global tonal adjustment with a database of input/output image pairs.&rdquo; CVPR 2011. IEEE, 2011. <span class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100"><a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700" style="text-decoration-line: none !important;" href="#ref2" aria-label="Anchor">#</a></span></h5>
