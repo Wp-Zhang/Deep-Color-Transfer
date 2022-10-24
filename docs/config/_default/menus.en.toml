@@ -20,6 +20,11 @@
   url = "https://github.com/Wp-Zhang/Deep-Color-Transfer"
   weight = 20
 
+[[main]]
+  name = "Posts"
+  pageRef = "posts"
+  weight = 30
+
 # [[main]]
 #   name = "Tags"
 #   pageRef = "tags"
