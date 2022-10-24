@@ -111,7 +111,7 @@ class HistogramEncodingNetwork(nn.Module):
         return out
 
 
-def HEN(
+def get_HEN(
     in_channels: int,
     out_channels: int,
     hidden_channels: int = 128,
