@@ -38,4 +38,13 @@ def _init_weights(layer: Module, type: str) -> None:
 
 
 def init_weights(model: Module, type: str = "Normal"):
+    """Initialize model weights
+
+    Parameters
+    ----------
+    model : Module
+        Target model.
+    type : str
+        Init method, can be ['Normal', 'Xavier', 'Kaiming', 'Orthogonal']
+    """
     model.apply(lambda x: _init_weights(x, type))
