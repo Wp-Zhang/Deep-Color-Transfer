@@ -23,6 +23,8 @@ class DCT(pl.LightningModule):
         cfg : DictConfig
             Config dictionary.
         """
+        super(DCT, self).__init__()
+
         cfg = OmegaConf.to_yaml(cfg)
 
         self.l_bin = cfg.l_bin

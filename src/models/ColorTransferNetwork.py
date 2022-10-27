@@ -126,6 +126,8 @@ class UNetDecoder(nn.Module):
     """U-Net Decoder"""
 
     def __init__(self, in_channels):
+        super(UNetDecoder, self).__init__()
+
         self.dec1 = UNetDecoderBlock([in_channels, 512, 512, 512])
         self.dec2 = UNetDecoderBlock([in_channels, 256, 256, 256])
         self.dec3 = UNetDecoderBlock([in_channels // 2, 128, 128, 128])
