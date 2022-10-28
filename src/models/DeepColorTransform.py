@@ -9,6 +9,8 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 from .ColorTransferNetwork import get_CTN
 from .HistogramEncodingNetwork import get_HEN
+from .LearnableHistogram import LearnableHistogram
+
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
@@ -42,6 +44,8 @@ class DCT(pl.LightningModule):
         self.HEN = get_HEN(
             in_channels=self.l_bin + 1, out_channels=64, init_method=cfg.init_method
         )
+
+        self.histogram = LearnableHistogram(3)
 
     def _forward(
         self,
