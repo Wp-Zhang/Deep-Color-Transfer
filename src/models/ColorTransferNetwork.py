@@ -174,9 +174,7 @@ class RefinementBlock(nn.Module):
             A refinement block
         """
         layers = [
-            nn.Conv2d(
-                in_channels * 3, in_channels * 3, kernel_size=3, padding=1, bias=True
-            ),
+            nn.Conv2d(in_channels * 3, in_channels * 3, kernel_size=3, padding=1),
             nn.InstanceNorm2d(in_channels * 3),
             nn.ReLU(True),
         ]
@@ -185,9 +183,7 @@ class RefinementBlock(nn.Module):
             layers += [nn.Dropout(0.5)]
 
         layers += [
-            nn.Conv2d(
-                in_channels * 3, in_channels, kernel_size=3, padding=1, bias=True
-            ),
+            nn.Conv2d(in_channels * 3, in_channels, kernel_size=3, padding=1),
             nn.InstanceNorm2d(in_channels),
         ]
 
@@ -208,7 +204,14 @@ class RefinementBlock(nn.Module):
 class ColorTransferNetwork(nn.Module):
     """Color Transfer Network"""
 
-    def __init__(self, in_channels: int, out_channels: int, use_dropout: bool = False):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        hist_channels: int,
+        enc_hidden: int = 64,
+        use_dropout: bool = False,
+    ):
         """Initialize a CTN
         Parameters
         ----------
@@ -216,27 +219,29 @@ class ColorTransferNetwork(nn.Module):
             Number of input channels
         output_nc : int
             Number of output channels
+        hist_channels : int
+            Number of HEN output channels
+        enc_hidden : int
+            Number of hidden channels for U-Net encoder, by default 64
         use_dropout : bool, optional
             If use dropout, by default False
         """
         super(ColorTransferNetwork, self).__init__()
 
-        enc_nc = 64
-
         # * Pre-refienment block
-        self.pre_refine_block = self.build_pre_refine_block(in_channels, enc_nc)
+        self.pre_refine_block = self.build_pre_refine_block(in_channels, hist_channels)
 
         # * Encoder
-        self.UNetEnc = UNetEncoder(in_channels, 64)
+        self.UNetEnc = UNetEncoder(in_channels, enc_hidden)
 
         # * Decoder
-        self.UNetDec = UNetDecoder(512 + 512 + enc_nc + enc_nc)
+        self.UNetDec = UNetDecoder(enc_hidden * 8 * 2 + hist_channels * 2)
 
         # * Refinement module
-        self.refine_block1 = RefinementBlock(enc_nc, use_dropout)
-        self.refine_block2 = RefinementBlock(enc_nc, use_dropout)
-        self.refine_block3 = RefinementBlock(enc_nc, use_dropout)
-        self.refine_block4 = self.build_last_refine_block(64, out_channels)
+        self.refine_block1 = RefinementBlock(hist_channels, use_dropout)
+        self.refine_block2 = RefinementBlock(hist_channels, use_dropout)
+        self.refine_block3 = RefinementBlock(hist_channels, use_dropout)
+        self.refine_block4 = self.build_last_refine_block(hist_channels, out_channels)
 
         # * Output blocks
         self.output_block1 = self.build_output_block(512, out_channels)
@@ -321,9 +326,19 @@ class ColorTransferNetwork(nn.Module):
 
     def forward(self, input_img, hist_enc1, hist_enc2):
         # * U-Net encode
+        # (b, hidden, h/2, w/2)
+        # (b, 2*hidden, h/4, w/4)
+        # (b, 4*hidden, h/8, w/8)
+        # (b, 8*hidden, h/16, w/16)
+        # (b, 8*hidden, h/32, w/32)
         enc1, enc2, enc3, enc4, enc5 = self.UNetEnc(input_img)
 
         # * U-Net decode
+        # (b, 512, h/16, w/16)
+        # (b, 256, h/8, w/8)
+        # (b, 128, h/4, w/4)
+        # (b, 64, h/2, w/2)
+        # (b, 64, h, w)
         dec1, dec2, dec3, dec4, dec5 = self.UNetDec(
             enc1, enc2, enc3, enc4, enc5, hist_enc1, hist_enc2, input_img
         )
@@ -333,12 +348,12 @@ class ColorTransferNetwork(nn.Module):
         tmp = self.refine_block1.forward(dec5 + pre_refine_out, hist_enc1, hist_enc2)
         tmp = self.refine_block2.forward(tmp + pre_refine_out, hist_enc1, hist_enc2)
         tmp = self.refine_block3.forward(tmp + pre_refine_out, hist_enc1, hist_enc2)
-        out5 = self.refine_block4(tmp + pre_refine_out)
+        out5 = self.refine_block4(tmp + pre_refine_out)  # (b, 3, h, w)
 
-        out1 = self.output_block1(dec1)
-        out2 = self.output_block2(dec2)
-        out3 = self.output_block3(dec3)
-        out4 = self.output_block4(dec4)
+        out1 = self.output_block1(dec1)  # (b, 3, h/16, w/16)
+        out2 = self.output_block2(dec2)  # (b, 3, h/8, w/8)
+        out3 = self.output_block3(dec3)  # (b, 3, h/4, w/4)
+        out4 = self.output_block4(dec4)  # (b, 3, h/2, w/2)
 
         return out1, out2, out3, out4, out5
 
@@ -346,6 +361,8 @@ class ColorTransferNetwork(nn.Module):
 def get_CTN(
     in_channels: int,
     out_channels: int,
+    hist_channels: int,
+    enc_hidden: int = 64,
     use_dropout=False,
     init_method="Normal",
 ) -> ColorTransferNetwork:
@@ -357,6 +374,10 @@ def get_CTN(
         Number of input channels.
     out_channels : int
         Number of output channels.
+    hist_channels : int
+        Number of HEN output channels
+    enc_hidden : int
+        Number of hidden channels for U-Net encoder, by default 64
     use_dropout : bool, optional
         If use dropout, by default False.
     init_method : str, optional
@@ -367,7 +388,9 @@ def get_CTN(
     ColorTransferNetwork
         A CTN
     """
-    model = ColorTransferNetwork(in_channels, out_channels, use_dropout).cuda()
+    model = ColorTransferNetwork(
+        in_channels, out_channels, hist_channels, enc_hidden, use_dropout
+    ).cuda()
     init_weights(model, type=init_method)
 
     return model
