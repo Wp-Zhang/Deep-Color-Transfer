@@ -3,10 +3,11 @@ import torch
 from collections import OrderedDict
 from torch.autograd import Variable
 import util.util as util
+
 import torch.nn as nn
 import torch.nn.functional as F
-
 import torchvision.transforms as T
+
 import pytorch_lightning as pl
 from .ColorTransferNetwork import get_CTN
 from .HistogramEncodingNetwork import get_HEN
@@ -113,7 +114,7 @@ class DCT(pl.LightningModule):
 
         # * =================== return result =====================
 
-        out_img = self._unpad(out_img)
+        out_img = self._unpad(out_img, self.pad)
 
         return in_img, upsample1, upsample2, upsample3, upsample4, out_img
 
