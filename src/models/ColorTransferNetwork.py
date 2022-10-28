@@ -37,24 +37,33 @@ class UNetEncoder(nn.Module):
             layers = [nn.LeakyReLU(0.2, True)]
 
         layers += [
+            # (b, c, h, w)
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1),
             nn.InstanceNorm2d(out_channels),
             nn.LeakyReLU(0.2, True),
+            # (b, c, h, w)
             nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
             nn.InstanceNorm2d(out_channels),
             nn.LeakyReLU(0.2, True),
+            # (b, c, h, w)
             nn.Conv2d(out_channels, out_channels, kernel_size=4, stride=2, padding=1),
             nn.InstanceNorm2d(out_channels),
+            # (b, c, h/2, w/2)
         ]
 
         return nn.Sequential(*layers)
 
     def forward(self, input):
-        out1 = self.enc1.forward(input)  # 256/256/64 -> 128/128/64
-        out2 = self.enc2.forward(out1)  # 128/128/64 -> 64/64/128
-        out3 = self.enc3.forward(out2)  # 64/64/128 -> 32/32/256
-        out4 = self.enc4.forward(out3)  # 32/32/256 -> 16/16/512
-        out5 = self.enc5.forward(out4)  # 16/16/512 -> 8/8/512
+        # (b, c, h, w) -> (b, hidden, h/2, w/2)
+        out1 = self.enc1.forward(input)
+        # (b, hidden, h/2, w/2) -> (b, 2*hidden, h/4, w/4)
+        out2 = self.enc2.forward(out1)
+        # (b, 2*hidden, h/4, w/4) -> (b, 4*hidden, h/8, w/8)
+        out3 = self.enc3.forward(out2)
+        # (b, 4*hidden, h/8, w/8) -> (b, 8*hidden, h/16, w/16)
+        out4 = self.enc4.forward(out3)
+        # (b, 8*hidden, h/16, w/16) -> (b, 8*hidden, h/32, w/32)
+        out5 = self.enc5.forward(out4)
 
         return out1, out2, out3, out4, out5
 
@@ -78,26 +87,15 @@ class UNetDecoderBlock(nn.Module):
             [
                 nn.ReLU(True),
                 nn.Upsample(scale_factor=2, mode="bilinear"),
-                nn.Conv2d(
-                    channel_list[0],
-                    channel_list[1],
-                    kernel_size=3,
-                    stride=1,
-                    padding=1,
-                    bias=True,
-                ),
+                nn.Conv2d(channel_list[0], channel_list[1], kernel_size=3, padding=1),
                 nn.InstanceNorm2d(channel_list[1]),
                 # ------------------------------------------------
                 nn.ReLU(True),
-                nn.Conv2d(
-                    channel_list[1], channel_list[2], kernel_size=3, stride=1, padding=1
-                ),
+                nn.Conv2d(channel_list[1], channel_list[2], kernel_size=3, padding=1),
                 nn.InstanceNorm2d(channel_list[2]),
                 # ------------------------------------------------
                 nn.ReLU(True),
-                nn.Conv2d(
-                    channel_list[2], channel_list[3], kernel_size=3, stride=1, padding=1
-                ),
+                nn.Conv2d(channel_list[2], channel_list[3], kernel_size=3, padding=1),
                 nn.InstanceNorm2d(channel_list[3]),
             ]
         )
@@ -108,15 +106,12 @@ class UNetDecoderBlock(nn.Module):
         enc2: torch.Tensor,
         hist_enc1: torch.Tensor,
         hist_enc2: torch.Tensor,
-        target_size1: int,
-        target_size2: int,
+        upsample_size: int,
     ) -> torch.Tensor:
-        unsample_size = (target_size1, target_size2)
-
-        enc1 = F.upsample(enc1, size=unsample_size, mode="bilinear")
-        enc2 = F.upsample(enc2, size=unsample_size, mode="bilinear")
-        hist_enc1 = F.upsample(hist_enc1, size=unsample_size, mode="bilinear")
-        hist_enc2 = F.upsample(hist_enc2, size=unsample_size, mode="bilinear")
+        enc1 = F.upsample(enc1, size=upsample_size, mode="bilinear")
+        enc2 = F.upsample(enc2, size=upsample_size, mode="bilinear")
+        hist_enc1 = F.upsample(hist_enc1, size=upsample_size, mode="bilinear")
+        hist_enc2 = F.upsample(hist_enc2, size=upsample_size, mode="bilinear")
 
         out = self.block(torch.cat([enc1, enc2, hist_enc1, hist_enc2], 1))
         return out
@@ -135,11 +130,11 @@ class UNetDecoder(nn.Module):
         self.dec5 = UNetDecoderBlock([in_channels // 8, 128, 64, 64])
 
     def forward(self, enc1, enc2, enc3, enc4, enc5, hist_enc1, hist_enc2, input_img):
-        out1 = self.dec1(enc5, enc5, hist_enc1, hist_enc2, enc5.size(2), enc5.size(3))
-        out2 = self.dec2(out1, enc4, hist_enc1, hist_enc2, enc4.size(2), enc4.size(3))
-        out3 = self.dec3(out2, enc3, hist_enc1, hist_enc2, enc3.size(2), enc3.size(3))
-        out4 = self.dec4(out3, enc2, hist_enc1, hist_enc2, enc2.size(2), enc2.size(3))
-        out5 = self.dec5(out4, enc1, hist_enc1, hist_enc2, enc1.size(2), enc1.size(3))
+        out1 = self.dec1(enc5, enc5, hist_enc1, hist_enc2, (enc5.size(2), enc5.size(3)))
+        out2 = self.dec2(out1, enc4, hist_enc1, hist_enc2, (enc4.size(2), enc4.size(3)))
+        out3 = self.dec3(out2, enc3, hist_enc1, hist_enc2, (enc3.size(2), enc3.size(3)))
+        out4 = self.dec4(out3, enc2, hist_enc1, hist_enc2, (enc2.size(2), enc2.size(3)))
+        out5 = self.dec5(out4, enc1, hist_enc1, hist_enc2, (enc1.size(2), enc1.size(3)))
         out5 = F.upsample(
             out5, size=(input_img.size(2), input_img.size(3)), mode="bilinear"
         )
@@ -266,19 +261,15 @@ class ColorTransferNetwork(nn.Module):
         return nn.Sequential(
             [
                 nn.ReLU(True),
-                nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
+                nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
                 nn.InstanceNorm2d(in_channels),
                 # * ------------------------------------
                 nn.ReLU(True),
-                nn.Conv2d(
-                    in_channels, out_channels, kernel_size=3, stride=1, padding=1
-                ),
+                nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
             ]
         )
 
-    def build_pre_refine_block(
-        self, in_channels: int, out_channels: int
-    ) -> nn.Module:  # 3 -> 64
+    def build_pre_refine_block(self, in_channels: int, out_channels: int) -> nn.Module:
         """Build initial block
         Parameters
         ----------
@@ -294,14 +285,10 @@ class ColorTransferNetwork(nn.Module):
         """
         return nn.Sequential(
             [
-                nn.Conv2d(
-                    in_channels, out_channels, kernel_size=3, padding=1, stride=1
-                ),
+                nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
                 nn.InstanceNorm2d(out_channels),
                 nn.ReLU(True),
-                nn.Conv2d(
-                    out_channels, out_channels, kernel_size=3, padding=1, stride=1
-                ),
+                nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
             ]
         )
 
@@ -322,27 +309,19 @@ class ColorTransferNetwork(nn.Module):
         """
         return nn.Sequential(
             [
-                nn.Conv2d(
-                    in_channels, in_channels, kernel_size=3, padding=1, bias=True
-                ),
+                nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
                 nn.ReLU(True),
-                nn.Conv2d(
-                    in_channels, in_channels, kernel_size=3, padding=1, bias=True
-                ),
+                nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
                 nn.ReLU(True),
-                nn.Conv2d(
-                    in_channels, in_channels, kernel_size=3, padding=1, bias=True
-                ),
+                nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
                 nn.ReLU(True),
-                nn.Conv2d(
-                    in_channels, out_channels, kernel_size=3, padding=1, bias=True
-                ),
+                nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
             ]
         )
 
     def forward(self, input_img, hist_enc1, hist_enc2):
         # * U-Net encode
-        enc1, enc2, enc3, enc4, enc5 = self.UNetEnc(input_img)  # 1/3/256/256
+        enc1, enc2, enc3, enc4, enc5 = self.UNetEnc(input_img)
 
         # * U-Net decode
         dec1, dec2, dec3, dec4, dec5 = self.UNetDec(
