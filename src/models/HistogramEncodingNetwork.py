@@ -22,8 +22,8 @@ class HistogramEncodingNetwork(nn.Module):
             Number of hidden channels, by default 128
         """
         super(HistogramEncodingNetwork, self).__init__()
-        self.in_channels = in_channels  # 10
-        self.out_channels = out_channels  # 32
+        self.in_channels = in_channels
+        self.out_channels = out_channels
 
         self.conv = nn.Sequential(
             [
