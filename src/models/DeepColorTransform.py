@@ -1,10 +1,4 @@
-import numpy as np
 import torch
-from collections import OrderedDict
-from torch.autograd import Variable
-import util.util as util
-
-import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as T
 
@@ -13,48 +7,51 @@ from .ColorTransferNetwork import get_CTN
 from .HistogramEncodingNetwork import get_HEN
 from .LearnableHistogram import LearnableHistogram
 
-import hydra
-from omegaconf import DictConfig, OmegaConf
+from box import Box
 
 
-@hydra.main(config_path="../../configs", config_name="DeepColorTransfer")
 class DCT(pl.LightningModule):
-    def __init__(self, cfg: DictConfig):
+    def __init__(self, cfg_path: str):
         """Initialize a Deep Color Transfer model.
 
         Parameters
         ----------
-        cfg : DictConfig
-            Config dictionary.
+        cfg : str
+            Config path.
         """
         super(DCT, self).__init__()
 
-        cfg = OmegaConf.to_yaml(cfg)
+        cfg = Box.from_yaml(open(cfg_path, "r").read())
 
+        # * ---------------- Model hyper-parameters ---------------
         self.l_bin = cfg.l_bin
         self.ab_bin = cfg.ab_bin
         self.use_seg = cfg.use_seg
+        self.init_method = cfg.init_method
         # * value in original implementation is 30, change to 32 for easier calculation
         self.pad = 32
         self.hist_channels = 64
 
+        # * ----------------- Training parameters -----------------
+        self.lambda1 = cfg.lambda1
+        self.lambda2 = cfg.lambda2
+        self.learning_rate = cfg.learning_rate  # 5e-5
+        self.beta1 = cfg.beta1  # 0.5
+        self.beta2 = cfg.beta2  # 0.999
+
+        # * -------------------- Define models --------------------
         self.HEN = get_HEN(
             in_channels=self.l_bin + 1,
             out_channels=self.hist_channels,
-            init_method=cfg.init_method,
+            init_method=self.init_method,
         )
         self.CTN = get_CTN(
             in_channels=3,
             out_channels=3,
             hist_channels=self.hist_channels,
-            init_method=cfg.init_method,
+            init_method=self.init_method,
         )
-
         self.histogram = LearnableHistogram(3)
-
-        # * loss weights
-        self.lambda1 = cfg.lambda1
-        self.lambda2 = cfg.lambda2
 
     def _forward(
         self,
@@ -116,7 +113,7 @@ class DCT(pl.LightningModule):
 
         out_img = self._unpad(out_img, self.pad)
 
-        return in_img, upsample1, upsample2, upsample3, upsample4, out_img
+        return upsample1, upsample2, upsample3, upsample4, out_img
 
     def _rep_pad(self, tensor: torch.Tensor) -> torch.Tensor:
         """Replication padding
@@ -152,7 +149,9 @@ class DCT(pl.LightningModule):
         img = img[..., pad : w - 2 * pad, pad : h - 2 * pad]
         return img
 
-    def loss(
+    # * ===================== training related ====================
+
+    def calc_loss(
         self,
         label_img: torch.Tensor,
         upsample1: torch.Tensor,
@@ -191,13 +190,34 @@ class DCT(pl.LightningModule):
         return final_loss
 
     def training_step(self, batch, batch_idx):
-        # training_step defines the train loop.
-        # it is independent of forward
-        x, y = batch
-        x = x.view(x.size(0), -1)
-        z = self.encoder(x)
-        x_hat = self.decoder(z)
-        loss = nn.functional.mse_loss(x_hat, x)
-        # Logging to TensorBoard by default
+        in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist = batch
+
+        # * forward
+        decoder_out = self._forward(
+            in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist
+        )
+
+        # * calculate loss
+        loss = self.calc_loss(ref_img, *decoder_out)
+
         self.log("train_loss", loss)
         return loss
+
+    def validation_step(self, batch, batch_idx):
+        in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist = batch
+
+        # * forward
+        decoder_out = self._forward(
+            in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist
+        )
+
+        # * calculate loss
+        loss = self.calc_loss(ref_img, *decoder_out)
+
+        self.log("val_loss", loss, prog_bar=True)
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(
+            self.parameters(), lr=self.learning_rate, betas=(self.beta1, self.beta2)
+        )
+        return optimizer

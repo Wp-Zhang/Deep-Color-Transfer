@@ -37,10 +37,11 @@ class LearnableHistogram(nn.Module):
             # * filter for class i
             conv = nn.Conv2d(num_classes, bin, kernel_size=(1, 1))
             # * freeze weight
+            conv.weight.requires_grad = False
             conv.weight.fill_(0)
             conv.weight[:, i, :, :] = 1
 
-            self.conv.append(conv)
+            self.conv1.append(conv)
 
         # * Conv2
         self.conv2 = nn.Conv2d(num_classes * bin, num_classes * bin, kernel_size=(1, 1))

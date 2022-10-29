@@ -84,20 +84,18 @@ class UNetDecoderBlock(nn.Module):
         assert len(channel_list) == 4, "Incorrect length of channel_list"
 
         self.block = nn.Sequential(
-            [
-                nn.ReLU(True),
-                nn.Upsample(scale_factor=2, mode="bilinear"),
-                nn.Conv2d(channel_list[0], channel_list[1], kernel_size=3, padding=1),
-                nn.InstanceNorm2d(channel_list[1]),
-                # ------------------------------------------------
-                nn.ReLU(True),
-                nn.Conv2d(channel_list[1], channel_list[2], kernel_size=3, padding=1),
-                nn.InstanceNorm2d(channel_list[2]),
-                # ------------------------------------------------
-                nn.ReLU(True),
-                nn.Conv2d(channel_list[2], channel_list[3], kernel_size=3, padding=1),
-                nn.InstanceNorm2d(channel_list[3]),
-            ]
+            nn.ReLU(True),
+            nn.Upsample(scale_factor=2, mode="bilinear"),
+            nn.Conv2d(channel_list[0], channel_list[1], kernel_size=3, padding=1),
+            nn.InstanceNorm2d(channel_list[1]),
+            # ------------------------------------------------
+            nn.ReLU(True),
+            nn.Conv2d(channel_list[1], channel_list[2], kernel_size=3, padding=1),
+            nn.InstanceNorm2d(channel_list[2]),
+            # ------------------------------------------------
+            nn.ReLU(True),
+            nn.Conv2d(channel_list[2], channel_list[3], kernel_size=3, padding=1),
+            nn.InstanceNorm2d(channel_list[3]),
         )
 
     def forward(
@@ -264,14 +262,12 @@ class ColorTransferNetwork(nn.Module):
             The output block.
         """
         return nn.Sequential(
-            [
-                nn.ReLU(True),
-                nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
-                nn.InstanceNorm2d(in_channels),
-                # * ------------------------------------
-                nn.ReLU(True),
-                nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
-            ]
+            nn.ReLU(True),
+            nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
+            nn.InstanceNorm2d(in_channels),
+            # * ------------------------------------
+            nn.ReLU(True),
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
         )
 
     def build_pre_refine_block(self, in_channels: int, out_channels: int) -> nn.Module:
@@ -289,12 +285,10 @@ class ColorTransferNetwork(nn.Module):
             The pre-refinement block
         """
         return nn.Sequential(
-            [
-                nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
-                nn.InstanceNorm2d(out_channels),
-                nn.ReLU(True),
-                nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
-            ]
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+            nn.InstanceNorm2d(out_channels),
+            nn.ReLU(True),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
         )
 
     def build_last_refine_block(self, in_channels: int, out_channels: int) -> nn.Module:
@@ -313,15 +307,13 @@ class ColorTransferNetwork(nn.Module):
             The last block of the refinement module.
         """
         return nn.Sequential(
-            [
-                nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
-                nn.ReLU(True),
-                nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
-                nn.ReLU(True),
-                nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
-                nn.ReLU(True),
-                nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
-            ]
+            nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
+            nn.ReLU(True),
+            nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
+            nn.ReLU(True),
+            nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1),
+            nn.ReLU(True),
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
         )
 
     def forward(self, input_img, hist_enc1, hist_enc2):
@@ -390,7 +382,7 @@ def get_CTN(
     """
     model = ColorTransferNetwork(
         in_channels, out_channels, hist_channels, enc_hidden, use_dropout
-    ).cuda()
+    )
     init_weights(model, type=init_method)
 
     return model

@@ -26,24 +26,22 @@ class HistogramEncodingNetwork(nn.Module):
         self.out_channels = out_channels
 
         self.conv = nn.Sequential(
-            [
-                nn.Conv2d(self.in_channels, hidden, kernel_size=4, padding=1, stride=2),
-                nn.LeakyReLU(0.1, True),
-                nn.Conv2d(hidden, hidden, kernel_size=4, padding=1, stride=2),
-                nn.LeakyReLU(0.1, True),
-                nn.Conv2d(hidden, hidden, kernel_size=4, padding=1, stride=2),
-                nn.LeakyReLU(0.1, True),
-                nn.Conv2d(hidden, hidden, kernel_size=4, padding=1, stride=2),
-                nn.LeakyReLU(0.1, True),
-                nn.Conv2d(hidden, hidden, kernel_size=4, padding=1, stride=1),
-                nn.LeakyReLU(0.1, True),
-                nn.Conv2d(hidden, hidden, kernel_size=4, padding=1, stride=1),
-                nn.LeakyReLU(0.1, True),
-                nn.Conv2d(hidden, hidden, kernel_size=4, padding=1, stride=1),
-                nn.LeakyReLU(0.1, True),
-                nn.Conv2d(hidden, self.out_channels, kernel_size=1, padding=0),
-                nn.Flatten(),
-            ]
+            nn.Conv2d(self.in_channels, hidden, kernel_size=4, padding=1, stride=2),
+            nn.LeakyReLU(0.1, True),
+            nn.Conv2d(hidden, hidden, kernel_size=4, padding=1, stride=2),
+            nn.LeakyReLU(0.1, True),
+            nn.Conv2d(hidden, hidden, kernel_size=4, padding=1, stride=2),
+            nn.LeakyReLU(0.1, True),
+            nn.Conv2d(hidden, hidden, kernel_size=4, padding=1, stride=2),
+            nn.LeakyReLU(0.1, True),
+            nn.Conv2d(hidden, hidden, kernel_size=4, padding=1, stride=1),
+            nn.LeakyReLU(0.1, True),
+            nn.Conv2d(hidden, hidden, kernel_size=4, padding=1, stride=1),
+            nn.LeakyReLU(0.1, True),
+            nn.Conv2d(hidden, hidden, kernel_size=4, padding=1, stride=1),
+            nn.LeakyReLU(0.1, True),
+            nn.Conv2d(hidden, self.out_channels, kernel_size=1, padding=0),
+            nn.Flatten(),
         )
 
         self.fc = nn.Sequential(nn.Linear(out_channels, out_channels))
@@ -80,7 +78,7 @@ def get_HEN(
     HistogramEncodingNetwork
         An HEN
     """
-    model = HistogramEncodingNetwork(in_channels, out_channels, hidden).cuda()
+    model = HistogramEncodingNetwork(in_channels, out_channels, hidden)
     init_weights(model, type=init_method)
 
     return model
