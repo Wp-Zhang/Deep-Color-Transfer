@@ -1,0 +1,10 @@
+l_bin: 64
+ab_bin: 64
+use_seg: true
+init_method: "Normal"
+lambda1: 1.5
+lambda2: 0.5
+
+learning_rate: 0.00005
+beta1: 0.5
+beta2: 0.999
