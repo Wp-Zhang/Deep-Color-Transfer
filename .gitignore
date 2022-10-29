@@ -11,3 +11,4 @@ data/test/input/segs/*
 data/test/reference/imgs/*
 data/test/reference/segs/*
 **/__pycache__/
+notebooks/lightning_logs
