@@ -2,3 +2,13 @@
 .hugo_build.lock
 docs/public
 docs/resources/_gen
+data/train/input/imgs/*
+data/train/input/segs/*
+data/train/reference/imgs/*
+data/train/reference/segs/*
+data/test/input/imgs/*
+data/test/input/segs/*
+data/test/reference/imgs/*
+data/test/reference/segs/*
+**/__pycache__/
+notebooks/lightning_logs
