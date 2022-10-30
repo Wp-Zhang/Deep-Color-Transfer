@@ -49,7 +49,7 @@ class HistogramEncodingNetwork(nn.Module):
     def forward(self, input):
         x = self.conv(input)
         x = self.fc(x)  # (batch_size, 64)
-        out = x[:, None, None]  # (batch_size, 64, 1, 1)
+        out = x[..., None, None]  # (batch_size, 64, 1, 1)
 
         return out
 

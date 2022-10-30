@@ -110,7 +110,6 @@ class UNetDecoderBlock(nn.Module):
         enc2 = F.upsample(enc2, size=upsample_size, mode="bilinear")
         hist_enc1 = F.upsample(hist_enc1, size=upsample_size, mode="bilinear")
         hist_enc2 = F.upsample(hist_enc2, size=upsample_size, mode="bilinear")
-
         out = self.block(torch.cat([enc1, enc2, hist_enc1, hist_enc2], 1))
         return out
 
@@ -118,14 +117,14 @@ class UNetDecoderBlock(nn.Module):
 class UNetDecoder(nn.Module):
     """U-Net Decoder"""
 
-    def __init__(self, in_channels):
+    def __init__(self, enc_nc, hist_nc):
         super(UNetDecoder, self).__init__()
 
-        self.dec1 = UNetDecoderBlock([in_channels, 512, 512, 512])
-        self.dec2 = UNetDecoderBlock([in_channels, 256, 256, 256])
-        self.dec3 = UNetDecoderBlock([in_channels // 2, 128, 128, 128])
-        self.dec4 = UNetDecoderBlock([in_channels // 4, 64, 64, 64])
-        self.dec5 = UNetDecoderBlock([in_channels // 8, 128, 64, 64])
+        self.dec1 = UNetDecoderBlock([enc_nc * 8 * 2 + hist_nc * 2, 512, 512, 512])
+        self.dec2 = UNetDecoderBlock([enc_nc * 8 * 2 + hist_nc * 2, 256, 256, 256])
+        self.dec3 = UNetDecoderBlock([enc_nc * 8 * 2 // 2 + hist_nc * 2, 128, 128, 128])
+        self.dec4 = UNetDecoderBlock([enc_nc * 8 * 2 // 4 + hist_nc * 2, 64, 64, 64])
+        self.dec5 = UNetDecoderBlock([enc_nc * 8 * 2 // 8 + hist_nc * 2, 128, 64, 64])
 
     def forward(self, enc1, enc2, enc3, enc4, enc5, hist_enc1, hist_enc2, input_img):
         out1 = self.dec1(enc5, enc5, hist_enc1, hist_enc2, (enc5.size(2), enc5.size(3)))
@@ -213,9 +212,9 @@ class ColorTransferNetwork(nn.Module):
         """Initialize a CTN
         Parameters
         ----------
-        input_nc : int
+        in_channels : int
             Number of input channels
-        output_nc : int
+        out_channels : int
             Number of output channels
         hist_channels : int
             Number of HEN output channels
@@ -233,7 +232,7 @@ class ColorTransferNetwork(nn.Module):
         self.UNetEnc = UNetEncoder(in_channels, enc_hidden)
 
         # * Decoder
-        self.UNetDec = UNetDecoder(enc_hidden * 8 * 2 + hist_channels * 2)
+        self.UNetDec = UNetDecoder(enc_hidden, hist_channels)
 
         # * Refinement module
         self.refine_block1 = RefinementBlock(hist_channels, use_dropout)

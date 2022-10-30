@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 
 
 def _get_ab_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
@@ -17,9 +18,21 @@ def _get_ab_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
         Ab-space histogram
     """
 
+    # H = cv2.calcHist(
+    #     [img.astype(np.float32)],
+    #     channels=[1, 2],
+    #     mask=None,
+    #     histSize=[num_bin, num_bin],
+    #     ranges=[0, 256, 0, 256],
+    # )
+    # H = H[None, ...]
+    # H = H / np.sum(H, axis=None)
+
+    arr = img.astype(float)
+
     # Exclude Zeros and Make value 0 ~ 1
-    arr1 = (img[0][1].ravel()[np.flatnonzero(img[0][1])] + 1) / 2
-    arr2 = (img[0][2].ravel()[np.flatnonzero(img[0][2])] + 1) / 2
+    arr1 = (arr[1].ravel()[np.flatnonzero(arr[1])] + 1) / 2
+    arr2 = (arr[2].ravel()[np.flatnonzero(arr[2])] + 1) / 2
 
     if arr1.shape[0] != arr2.shape[0]:
         if arr2.shape[0] < arr1.shape[0]:
@@ -34,12 +47,8 @@ def _get_ab_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
     H = np.rot90(H)
     H = np.flip(H, 0)
 
-    H = H[None, ...]
-
-    # Normalize
-    total_sum = np.sum(H, axis=None)
-    # 256 * 256 => same value as arr[0][0].ravel()[np.flatnonzero(arr[0][0])].shape
-    H = H / total_sum
+    H = H[None, ...].astype(float)
+    H = H / np.sum(H, axis=None)
 
     return H
 
@@ -59,18 +68,27 @@ def _get_l_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
     np.ndarray
         Luminance histogram
     """
+    # H = cv2.calcHist(
+    #     [img.astype(np.float32)],
+    #     channels=[0, 1],
+    #     mask=None,
+    #     histSize=[num_bin, num_bin],
+    #     ranges=[0, 256, 0, 256],
+    # )
+    # H = H[..., None]
+    # H = H / np.sum(H, axis=None)
+
+    # return H
     # Preprocess
-    arr0 = (img[0][0].ravel()[np.flatnonzero(img[0][0])] + 1) / 2
+    arr = img.astype(float)
+    arr0 = (arr[0].ravel()[np.flatnonzero(arr[0])] + 1) / 2
     arr1 = np.zeros(arr0.size)
 
     arr_new = [arr0, arr1]
     H, edges = np.histogramdd(arr_new, bins=[num_bin, 1], range=((0, 1), (-1, 2)))
+    H = np.transpose(H[None, ...], (1, 0, 2)).astype(float)
 
-    H = H[None, ...]
-    H = np.transpose(H, (1, 0, 2))
-
-    total_sum = np.sum(H, axis=None)
-    H = H / total_sum
+    H = H / np.sum(H, axis=None)
 
     return H
 
@@ -96,6 +114,7 @@ def get_histogram(img: "np.ndarray", l_bin: int, ab_bin: int) -> "np.ndarray":
     ab_hist = _get_ab_hist(img, ab_bin)
 
     l_hist = np.tile(l_hist, (1, ab_bin, ab_bin))
+
     hist = np.concatenate([ab_hist, l_hist], axis=0)
 
     return hist

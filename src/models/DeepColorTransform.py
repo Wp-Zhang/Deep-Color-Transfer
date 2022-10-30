@@ -92,11 +92,21 @@ class DCT(pl.LightningModule):
             # * Replace common seg area value
             # (batch, 1, w1, h1)
             common_mask = in_common_seg.sum(dim=1).unsqueeze(1)
-            replace_value = sw_hist_enc_tile[in_common_seg.unsqueeze(2)].sum(dim=1)
+            # ( batch, 64, w1, h1)
+            common_mask = common_mask.repeat(1, ref_hist_enc.size(1), 1, 1)
+            in_common_seg = in_common_seg.unsqueeze(2).repeat(
+                1, 1, sw_hist_enc_tile.size(2), 1, 1
+            )
 
+            replace_value = (sw_hist_enc_tile * in_common_seg).sum(dim=1)
             # (batch, 64, w1, h1)
             ref_hist_enc_tile = ref_hist_enc.repeat(1, 1, in_w, in_h)
-            ref_hist_enc_tile[common_mask] = replace_value
+
+            # print(sw_hist_enc_tile.size(), in_common_seg.size(), common_mask.size())
+            # print(ref_hist_enc.size(), ref_hist_enc_tile.size(), replace_value.size())
+            ref_hist_enc_tile = (
+                ref_hist_enc_tile * (1 - common_mask) + common_mask * replace_value
+            )
 
         # * -------------------- padding result -------------------
         # (batch, 64, w1+2*pad, h1+2*pad)
@@ -112,7 +122,6 @@ class DCT(pl.LightningModule):
         # * =================== return result =====================
 
         out_img = self._unpad(out_img, self.pad)
-
         return upsample1, upsample2, upsample3, upsample4, out_img
 
     def _rep_pad(self, tensor: torch.Tensor) -> torch.Tensor:
@@ -128,7 +137,7 @@ class DCT(pl.LightningModule):
         torch.Tensor
             Padded tensor
         """
-        return F.pad(tensor, self.pad, "replicate")
+        return F.pad(tensor, (self.pad, self.pad, self.pad, self.pad), "replicate")
 
     def _unpad(self, img: torch.Tensor, pad: int) -> torch.Tensor:
         """De-padding image
@@ -146,8 +155,15 @@ class DCT(pl.LightningModule):
             De-padded image
         """
         w, h = img.size()[-2:]
-        img = img[..., pad : w - 2 * pad, pad : h - 2 * pad]
+        img = img[..., pad : w - pad, pad : h - pad]
         return img
+
+    def forward(self, x):
+        in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist = x
+        _, _, _, _, out = self._forward(
+            in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist
+        )
+        return out
 
     # * ===================== training related ====================
 
