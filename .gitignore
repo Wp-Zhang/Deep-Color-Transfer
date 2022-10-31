@@ -12,3 +12,7 @@ data/test/reference/imgs/*.png
 data/test/reference/segs/*.npy
 **/__pycache__/
 notebooks/lightning_logs
+
+settings.json
+.coverage
+cov.xml
