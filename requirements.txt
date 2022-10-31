@@ -1,8 +1,7 @@
-# local package
--e .
-
-# external requirements
-torchfile==0.1.0
-scikit-image==0.18.1
-opencv-python==4.5.1.48
-seaborn==0.11.1
+numpy==1.21.5
+opencv_python==4.6.0.66
+pytest==7.2.0
+python_box==6.0.2
+pytorch_lightning==1.7.5
+torch==1.13.0
+torchvision==0.14.0
