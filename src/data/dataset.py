@@ -28,11 +28,18 @@ class Adobe5kDataset(Dataset):
             (self.data_dir / "reference" / "segs").glob("**/*.npy")
         )
 
-        self.transform = T.Compose(
+        target_size = (512, 512)
+        self.img_transform = T.Compose(
             [
                 T.ToTensor(),
-                T.Resize((128, 128)),  # ! TBD
+                T.Resize(target_size),  # ! TBD
                 # T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            ]
+        )
+        self.seg_transform = T.Compose(
+            [
+                T.ToTensor(),
+                T.Resize(target_size),  # ! TBD
             ]
         )
 
@@ -42,50 +49,32 @@ class Adobe5kDataset(Dataset):
     def __getitem__(self, index):
         in_img = cv2.imread(str(self.in_img_paths[index]))
         in_img = cv2.cvtColor(in_img, cv2.COLOR_RGB2LAB)
-        # in_img = np.transpose(in_img, (2, 1, 0))
-        in_img = self.transform(in_img).numpy()
+        in_img = self.img_transform(in_img).numpy()
         in_seg = np.load(self.in_img_segs[index])[0]
+        in_seg = self.seg_transform(in_seg[..., None]).numpy()[0]
 
         ref_img = cv2.imread(str(self.ref_img_paths[index]))
         ref_img = cv2.cvtColor(ref_img, cv2.COLOR_RGB2LAB)
-        # ref_img = np.transpose(ref_img, (2, 1, 0))
-        ref_img = self.transform(ref_img).numpy()
+        ref_img = self.img_transform(ref_img).numpy()
         ref_seg = np.load(self.ref_img_segs[index])[0]
+        ref_seg = self.seg_transform(ref_seg[..., None]).numpy()[0]
 
         # in_img = self._rescale_img(in_img)
         # ref_img = self._rescale_img(ref_img)
 
         # * In case of mis-alignment
-        in_seg = (
-            F.upsample(
-                torch.Tensor(in_seg[None, None, ...]),
-                size=in_img.shape[1:],
-                mode="bilinear",
-            )
-            .numpy()[0][0]
-            .astype(int)
-        )
-        ref_seg = (
-            F.upsample(
-                torch.Tensor(ref_seg[None, None, ...]),
-                size=ref_img.shape[1:],
-                mode="bilinear",
-            )
-            .numpy()[0][0]
-            .astype(int)
-        )
 
         # ! tmp fix
-        in_hist = np.random.rand(self.l_bin + 1, self.ab_bin, self.ab_bin)
-        ref_hist = np.random.rand(self.l_bin + 1, self.ab_bin, self.ab_bin)
-        ref_seg_hist = np.random.rand(
-            self.num_classes, self.l_bin + 1, self.ab_bin, self.ab_bin
-        )
-        # in_hist = get_histogram(in_img, self.l_bin, self.ab_bin)
-        # ref_hist = get_histogram(ref_img, self.l_bin, self.ab_bin)
-        # ref_seg_hist = get_segwise_hist(
-        #     ref_img, self.l_bin, self.ab_bin, ref_seg, self.num_classes
+        # in_hist = np.random.rand(self.l_bin + 1, self.ab_bin, self.ab_bin)
+        # ref_hist = np.random.rand(self.l_bin + 1, self.ab_bin, self.ab_bin)
+        # ref_seg_hist = np.random.rand(
+        #     self.num_classes, self.l_bin + 1, self.ab_bin, self.ab_bin
         # )
+        in_hist = get_histogram(in_img, self.l_bin, self.ab_bin)
+        ref_hist = get_histogram(ref_img, self.l_bin, self.ab_bin)
+        ref_seg_hist = get_segwise_hist(
+            ref_img, self.l_bin, self.ab_bin, ref_seg, self.num_classes
+        )
 
         in_common_seg = gen_common_seg_map(in_seg, ref_seg, self.num_classes)
 
