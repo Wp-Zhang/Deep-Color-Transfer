@@ -9,12 +9,23 @@ Project Organization
     ├── LICENSE
     ├── README.md          <- The top-level README for developers using this project.
     ├── data
-    │   ├── external       <- Data from third party sources.
-    │   ├── interim        <- Intermediate data that has been transformed.
-    │   ├── processed      <- The final, canonical data sets for modeling.
-    │   └── raw            <- The original, immutable data dump.
+    │   ├── train          <- Trainset
+    |   |   ├── input
+    |   |   |   ├── imgs   <- Input images
+    |   |   |   └── segs   <- Input image semantic segmentation results
+    |   |   └── reference
+    |   |       ├── imgs   <- Reference images
+    |   |       └── segs   <- Reference image semantic segmentation results
+    |   |
+    │   └── test           <- Testset
+    |       ├── input
+    |       |   ├── imgs   <- Input images
+    |       |   └── segs   <- Input image semantic segmentation results
+    |       └── reference
+    |           ├── imgs   <- Reference images
+    |           └── segs   <- Reference image semantic segmentation results
     │
-    ├── docs               <- Documentation.
+    ├── docs               <- Project website
     │
     ├── models             <- Trained and serialized models, model predictions, or model summaries
     │
@@ -41,7 +52,8 @@ Project Organization
         │
         ├── models         <- Scripts to train models and then use trained models to make
         │                     predictions
-        │  
-        │   
+        │
+        ├── util           <- Scripts of tool functions
+        │ 
         │
         └── visualization  <- Scripts to create exploratory and results oriented visualizations
