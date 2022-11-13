@@ -210,7 +210,7 @@ def gen_common_seg_map(
 # * ===================================================
 
 
-def _preprocess_single_pair(
+def _preprocess_imgs(
     in_img: "np.ndarray[int]",
     in_seg: "np.ndarray[int]",
     ref_img: "np.ndarray[int]",
@@ -278,6 +278,54 @@ def _preprocess_single_pair(
     }
 
 
+def _preprocess_single_pair(
+    i,
+    in_img_paths,
+    in_seg_paths,
+    ref_img_paths,
+    ref_seg_paths,
+    save_dir,
+    resize_dim,
+    l_bin,
+    ab_bin,
+    num_classes,
+):
+    in_img = cv2.imread(str(in_img_paths[i]))
+    in_seg = np.load(in_seg_paths[i])[0]
+    ref_img = cv2.imread(str(ref_img_paths[i]))
+    ref_seg = np.load(ref_seg_paths[i])[0]
+
+    res = _preprocess_imgs(
+        in_img,
+        in_seg,
+        ref_img,
+        ref_seg,
+        resize_dim,
+        l_bin,
+        ab_bin,
+        num_classes,
+    )
+
+    p_in_img_dir = save_dir / "input" / "imgs"
+    p_in_seg_dir = save_dir / "input" / "segs"
+    p_in_hist_dir = save_dir / "input" / "hist"
+    p_common_seg_dir = save_dir / "input" / "common_seg"
+    p_ref_img_dir = save_dir / "reference" / "imgs"
+    p_ref_seg_dir = save_dir / "reference" / "segs"
+    p_ref_hist_dir = save_dir / "reference" / "hist"
+    p_ref_seg_hist_dir = save_dir / "reference" / "seg_hist"
+
+    cv2.imwrite(str(p_in_img_dir / f"{i}.png"), res["in_img"])
+    np.save(p_in_seg_dir / f"{i}", res["in_seg"])
+    np.save(p_in_hist_dir / f"{i}", res["in_hist"])
+    np.save(p_common_seg_dir / f"{i}", res["in_common_seg"])
+
+    cv2.imwrite(str(p_ref_img_dir / f"{i}.png"), res["ref_img"])
+    np.save(p_ref_seg_dir / f"{i}", res["ref_seg"])
+    np.save(p_ref_hist_dir / f"{i}", res["ref_hist"])
+    np.save(p_ref_seg_hist_dir / f"{i}", res["ref_seg_hist"])
+
+
 def preprocess_dataset(
     raw_dir: str,
     processed_dir: str,
@@ -310,10 +358,10 @@ def preprocess_dataset(
     processed_dir = Path(processed_dir)
 
     for mode in ["train", "test"]:
-        p_in_img_dir = processed_dir / mode / "intput" / "imgs"
-        p_in_seg_dir = processed_dir / mode / "intput" / "segs"
-        p_in_hist_dir = processed_dir / mode / "intput" / "hist"
-        p_common_seg_dir = processed_dir / mode / "intput" / "common_seg"
+        p_in_img_dir = processed_dir / mode / "input" / "imgs"
+        p_in_seg_dir = processed_dir / mode / "input" / "segs"
+        p_in_hist_dir = processed_dir / mode / "input" / "hist"
+        p_common_seg_dir = processed_dir / mode / "input" / "common_seg"
         p_ref_img_dir = processed_dir / mode / "reference" / "imgs"
         p_ref_seg_dir = processed_dir / mode / "reference" / "segs"
         p_ref_hist_dir = processed_dir / mode / "reference" / "hist"
@@ -336,29 +384,19 @@ def preprocess_dataset(
         ref_img_paths = list((raw_dir / mode / "reference" / "imgs").glob("**/*.png"))
         ref_seg_paths = list((raw_dir / mode / "reference" / "segs").glob("**/*.npy"))
 
-        for i in tqdm(range(len(in_img_paths)), desc=f"Processing {mode} set"):
-            in_img = cv2.imread(str(in_img_paths[i]))
-            in_seg = np.load(in_seg_paths[i])[0]
-            ref_img = cv2.imread(str(ref_img_paths[i]))
-            ref_seg = np.load(ref_seg_paths[i])[0]
-
-            res = _preprocess_single_pair(
-                in_img,
-                in_seg,
-                ref_img,
-                ref_seg,
+        parallel = Parallel(n_jobs=n_jobs, backend="multiprocessing")
+        parallel(
+            delayed(_preprocess_single_pair)(
+                i,
+                in_img_paths,
+                in_seg_paths,
+                ref_img_paths,
+                ref_seg_paths,
+                processed_dir / mode,
                 resize_dim,
                 l_bin,
                 ab_bin,
                 num_classes,
             )
-
-            cv2.imwrite(str(p_in_img_dir / f"{i}.png"), res["in_img"])
-            np.save(p_in_seg_dir / f"{i}.npy", res["in_seg"])
-            np.save(p_in_hist_dir / f"{i}.npy", res["in_hist"])
-            np.save(p_common_seg_dir / f"{i}.npy", res["in_common_seg"])
-
-            cv2.imwrite(str(p_ref_img_dir / f"{i}.png"), res["ref_img"])
-            np.save(p_ref_seg_dir / f"{i}.npy", res["ref_seg"])
-            np.save(p_ref_hist_dir / f"{i}.npy", res["ref_hist"])
-            np.save(p_ref_seg_hist_dir / f"{i}.npy", res["ref_seg_hist"])
+            for i in tqdm(range(len(in_img_paths)), desc=f"Processing {mode} set")
+        )
