@@ -13,21 +13,23 @@ Project Organization
     ├── LICENSE
     ├── README.md          <- The top-level README for developers using this project.
     ├── data
-    │   ├── train          <- Trainset
-    |   |   ├── input
-    |   |   |   ├── imgs   <- Input images
-    |   |   |   └── segs   <- Input image semantic segmentation results
-    |   |   └── reference
-    |   |       ├── imgs   <- Reference images
-    |   |       └── segs   <- Reference image semantic segmentation results
-    |   |
-    │   └── test           <- Testset
-    |       ├── input
-    |       |   ├── imgs   <- Input images
-    |       |   └── segs   <- Input image semantic segmentation results
-    |       └── reference
-    |           ├── imgs   <- Reference images
-    |           └── segs   <- Reference image semantic segmentation results
+    |   ├── raw            <- Raw dataset directory
+    |   │   ├── train          <- Trainset
+    |   |   |   ├── input
+    |   |   |   |   ├── imgs   <- Input images
+    |   |   |   |   └── segs   <- Input image semantic segmentation results
+    |   |   |   └── reference
+    |   |   |       ├── imgs   <- Reference images
+    |   |   |       └── segs   <- Reference image semantic segmentation results
+    |   |   |
+    |   │   └── test           <- Testset
+    |   |       ├── input
+    |   |       |   ├── imgs   <- Input images
+    |   |       |   └── segs   <- Input image semantic segmentation results
+    |   |       └── reference
+    |   |           ├── imgs   <- Reference images
+    |   |           └── segs   <- Reference image semantic segmentation results
+    |   └── processed      <- Processed dataset directory, ready for model training
     │
     ├── docs               <- Project website
     │
