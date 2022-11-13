@@ -1,0 +1,1 @@
+pytest --cov-report term --cov=src tests/ --cov-report xml:cov.xml

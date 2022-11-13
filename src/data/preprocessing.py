@@ -1,5 +1,9 @@
+from typing import Tuple, Dict
 import numpy as np
 import cv2
+from pathlib import Path
+from joblib import Parallel, delayed
+from tqdm import tqdm
 
 
 def _get_ab_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
@@ -95,7 +99,7 @@ def _get_l_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
 
 
 def get_histogram(img: "np.ndarray", l_bin: int, ab_bin: int) -> "np.ndarray":
-    """_summary_
+    """Calculate image lab-space histogram
 
     Parameters
     ----------
@@ -177,7 +181,7 @@ def one_hot(seg: "np.ndarray[int]", num_classes: int) -> "np.ndarray[int]":
 def gen_common_seg_map(
     input_seg: "np.ndarray[int]", ref_seg: "np.ndarray[int]", num_classes: int
 ) -> "np.ndarray[int]":
-    """_summary_
+    """Get intersection of two segmentation maps
 
     Parameters
     ----------
@@ -201,3 +205,198 @@ def gen_common_seg_map(
     input_oh[~np.isin(np.arange(num_classes), common), :, :] = 0
 
     return input_oh
+
+
+# * ===================================================
+
+
+def _preprocess_imgs(
+    in_img: "np.ndarray[int]",
+    in_seg: "np.ndarray[int]",
+    ref_img: "np.ndarray[int]",
+    ref_seg: "np.ndarray[int]",
+    resize_dim: Tuple[int, int],
+    l_bin: int,
+    ab_bin: int,
+    num_classes: int,
+) -> Dict:
+    """Preprocess a single pair of images
+
+    Parameters
+    ----------
+    in_img : np.ndarray[int]
+        Input image
+    in_seg : np.ndarray[int]
+        Segmentation map of input image
+    ref_img : np.ndarray[int]
+        Reference image
+    ref_seg : np.ndarray[int]
+        Segmentation map of reference image
+    resize_dim : Tuple[int, int]
+        Target resize dimension, (width, height)
+    l_bin : int
+        Size of luminance bin
+    ab_bin : int
+        Size of ab bin
+    num_classes: int
+        Number of segmentation labels.
+
+    Returns
+    -------
+    D
+        in_img, in_hist, in_common_seg, ref_img, \
+            ref_hist, ref_seg_hist
+    """
+    # * Convert image color space
+    in_img = cv2.cvtColor(in_img, cv2.COLOR_RGB2LAB)
+    ref_img = cv2.cvtColor(ref_img, cv2.COLOR_RGB2LAB)
+
+    # * Resize
+    in_img = cv2.resize(in_img, resize_dim, interpolation=cv2.INTER_NEAREST)
+    in_seg = cv2.resize(in_seg, resize_dim, interpolation=cv2.INTER_NEAREST)
+    ref_img = cv2.resize(ref_img, resize_dim, interpolation=cv2.INTER_NEAREST)
+    ref_seg = cv2.resize(ref_seg, resize_dim, interpolation=cv2.INTER_NEAREST)
+
+    # * Get histogram
+    in_hist = get_histogram(in_img.transpose(2, 0, 1), l_bin, ab_bin)
+    ref_hist = get_histogram(ref_img.transpose(2, 0, 1), l_bin, ab_bin)
+    ref_seg_hist = get_segwise_hist(
+        ref_img.transpose(2, 0, 1), l_bin, ab_bin, ref_seg, num_classes
+    )
+
+    in_common_seg = gen_common_seg_map(in_seg, ref_seg, num_classes)
+
+    return {
+        "in_img": in_img,
+        "in_seg": in_seg,
+        "in_hist": in_hist,
+        "in_common_seg": in_common_seg,
+        "ref_img": ref_img,
+        "ref_seg": ref_seg,
+        "ref_hist": ref_hist,
+        "ref_seg_hist": ref_seg_hist,
+    }
+
+
+def _preprocess_single_pair(
+    i,
+    in_img_paths,
+    in_seg_paths,
+    ref_img_paths,
+    ref_seg_paths,
+    save_dir,
+    resize_dim,
+    l_bin,
+    ab_bin,
+    num_classes,
+):
+    in_img = cv2.imread(str(in_img_paths[i]))
+    in_seg = np.load(in_seg_paths[i])[0]
+    ref_img = cv2.imread(str(ref_img_paths[i]))
+    ref_seg = np.load(ref_seg_paths[i])[0]
+
+    res = _preprocess_imgs(
+        in_img,
+        in_seg,
+        ref_img,
+        ref_seg,
+        resize_dim,
+        l_bin,
+        ab_bin,
+        num_classes,
+    )
+
+    p_in_img_dir = save_dir / "input" / "imgs"
+    p_in_seg_dir = save_dir / "input" / "segs"
+    p_in_hist_dir = save_dir / "input" / "hist"
+    p_common_seg_dir = save_dir / "input" / "common_seg"
+    p_ref_img_dir = save_dir / "reference" / "imgs"
+    p_ref_seg_dir = save_dir / "reference" / "segs"
+    p_ref_hist_dir = save_dir / "reference" / "hist"
+    p_ref_seg_hist_dir = save_dir / "reference" / "seg_hist"
+
+    cv2.imwrite(str(p_in_img_dir / f"{i}.png"), res["in_img"])
+    np.save(p_in_seg_dir / f"{i}", res["in_seg"])
+    np.save(p_in_hist_dir / f"{i}", res["in_hist"])
+    np.save(p_common_seg_dir / f"{i}", res["in_common_seg"])
+
+    cv2.imwrite(str(p_ref_img_dir / f"{i}.png"), res["ref_img"])
+    np.save(p_ref_seg_dir / f"{i}", res["ref_seg"])
+    np.save(p_ref_hist_dir / f"{i}", res["ref_hist"])
+    np.save(p_ref_seg_hist_dir / f"{i}", res["ref_seg_hist"])
+
+
+def preprocess_dataset(
+    raw_dir: str,
+    processed_dir: str,
+    resize_dim: Tuple[int, int],
+    l_bin: int,
+    ab_bin: int,
+    num_classes: int,
+    n_jobs: int,
+):
+    """Preprocess the dataset and save the result.
+
+    Parameters
+    ----------
+    raw_dir : str
+        Path to raw dataset
+    processed_dir : str
+        Path to processed dataset
+    resize_dim : Tuple[int, int]
+        Target resize dimension, (width, height)
+    l_bin : int
+        Size of luminance bin
+    ab_bin : int
+        Size of ab bin
+    num_classes: int
+        Number of segmentation labels.
+    n_jobs : int
+        Number of jobs for parallel preprocessing
+    """
+    raw_dir = Path(raw_dir)
+    processed_dir = Path(processed_dir)
+
+    for mode in ["train", "test"]:
+        p_in_img_dir = processed_dir / mode / "input" / "imgs"
+        p_in_seg_dir = processed_dir / mode / "input" / "segs"
+        p_in_hist_dir = processed_dir / mode / "input" / "hist"
+        p_common_seg_dir = processed_dir / mode / "input" / "common_seg"
+        p_ref_img_dir = processed_dir / mode / "reference" / "imgs"
+        p_ref_seg_dir = processed_dir / mode / "reference" / "segs"
+        p_ref_hist_dir = processed_dir / mode / "reference" / "hist"
+        p_ref_seg_hist_dir = processed_dir / mode / "reference" / "seg_hist"
+
+        for dir in [
+            p_in_img_dir,
+            p_in_seg_dir,
+            p_in_hist_dir,
+            p_common_seg_dir,
+            p_ref_img_dir,
+            p_ref_seg_dir,
+            p_ref_hist_dir,
+            p_ref_seg_hist_dir,
+        ]:
+            dir.mkdir(parents=True, exist_ok=True)
+
+        in_img_paths = list((raw_dir / mode / "input" / "imgs").glob("**/*.png"))
+        in_seg_paths = list((raw_dir / mode / "input" / "segs").glob("**/*.npy"))
+        ref_img_paths = list((raw_dir / mode / "reference" / "imgs").glob("**/*.png"))
+        ref_seg_paths = list((raw_dir / mode / "reference" / "segs").glob("**/*.npy"))
+
+        parallel = Parallel(n_jobs=n_jobs, backend="multiprocessing")
+        parallel(
+            delayed(_preprocess_single_pair)(
+                i,
+                in_img_paths,
+                in_seg_paths,
+                ref_img_paths,
+                ref_seg_paths,
+                processed_dir / mode,
+                resize_dim,
+                l_bin,
+                ab_bin,
+                num_classes,
+            )
+            for i in tqdm(range(len(in_img_paths)), desc=f"Processing {mode} set")
+        )
