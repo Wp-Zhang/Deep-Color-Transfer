@@ -95,7 +95,7 @@ def _get_l_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
 
 
 def get_histogram(img: "np.ndarray", l_bin: int, ab_bin: int) -> "np.ndarray":
-    """_summary_
+    """Calculate image lab-space histogram
 
     Parameters
     ----------
@@ -177,7 +177,7 @@ def one_hot(seg: "np.ndarray[int]", num_classes: int) -> "np.ndarray[int]":
 def gen_common_seg_map(
     input_seg: "np.ndarray[int]", ref_seg: "np.ndarray[int]", num_classes: int
 ) -> "np.ndarray[int]":
-    """_summary_
+    """Get intersection of two segmentation maps
 
     Parameters
     ----------
