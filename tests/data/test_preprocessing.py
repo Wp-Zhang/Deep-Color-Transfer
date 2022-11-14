@@ -1,12 +1,18 @@
 import pytest
 import torch
 import numpy as np
+import shutil
+import random
 from src.data.preprocessing import (
     get_histogram,
     get_segwise_hist,
     one_hot,
     gen_common_seg_map,
+    preprocess_dataset,
 )
+import os
+
+os.environ["KMP_DUPLICATE_LIB_OK"] = "True"  # * Solve multiprocessing error
 
 
 def test_get_histogram():
@@ -49,3 +55,17 @@ def test_gen_common_seg_map():
     res = gen_common_seg_map(seg1, seg2, 5)
     assert res.shape == (5, *seg1.shape)
     assert np.sum(expected - res, axis=None) == 0
+
+
+def test_dataset_preprocessing():
+    folder_name = random.randint(0, 10000)
+    preprocess_dataset(
+        raw_dir="./data/raw",
+        processed_dir=f"./data/processed_{folder_name}/",
+        resize_dim=(10, 10),
+        l_bin=5,
+        ab_bin=5,
+        num_classes=50,
+        n_jobs=1,
+    )
+    shutil.rmtree(f"./data/processed_{folder_name}")
