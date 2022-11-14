@@ -379,10 +379,18 @@ def preprocess_dataset(
         ]:
             dir.mkdir(parents=True, exist_ok=True)
 
-        in_img_paths = list((raw_dir / mode / "input" / "imgs").glob("**/*.png"))
-        in_seg_paths = list((raw_dir / mode / "input" / "segs").glob("**/*.npy"))
-        ref_img_paths = list((raw_dir / mode / "reference" / "imgs").glob("**/*.png"))
-        ref_seg_paths = list((raw_dir / mode / "reference" / "segs").glob("**/*.npy"))
+        in_img_paths = sorted(
+            list((raw_dir / mode / "input" / "imgs").glob("**/*.png"))
+        )
+        in_seg_paths = sorted(
+            list((raw_dir / mode / "input" / "segs").glob("**/*.npy"))
+        )
+        ref_img_paths = sorted(
+            list((raw_dir / mode / "reference" / "imgs").glob("**/*.png"))
+        )
+        ref_seg_paths = sorted(
+            list((raw_dir / mode / "reference" / "segs").glob("**/*.npy"))
+        )
 
         parallel = Parallel(n_jobs=n_jobs, backend="multiprocessing")
         parallel(
