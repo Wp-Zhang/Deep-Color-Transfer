@@ -55,10 +55,10 @@ class DCT(pl.LightningModule):
 
     def _forward(
         self,
-        in_img: torch.Tensor,  # (batch, 3, w1, h1)
+        in_img: torch.Tensor,  # (batch, 3, h1, w1)
         in_hist: torch.Tensor,  # (batch, l_bin+1, ab_bin, ab_bin)
-        in_common_seg: torch.BoolTensor,  # (batch, num_seg_labels, w1, h1), 1 means label apears in both imgs, otherwise 0
-        ref_img: torch.Tensor,  # (batch, 3, w2, h2)
+        in_common_seg: torch.BoolTensor,  # (batch, num_seg_labels, h1, w1), 1 means label apears in both imgs, otherwise 0
+        ref_img: torch.Tensor,  # (batch, 3, h2, w2)
         ref_hist: torch.Tensor,  # (batch, l_bin+1, ab_bin, ab_bin)
         ref_segwise_hist: torch.Tensor,  # (batch, num_seg_labels, l_bin+1, ab_bin, ab_bin)
     ):
@@ -74,9 +74,9 @@ class DCT(pl.LightningModule):
         input_hist_enc = self.HEN(in_hist)
         ref_hist_enc = self.HEN(ref_hist)
         # * Tile the encoded histogram
-        # (batch, 64, w1, h1)
+        # (batch, 64, h1, w1)
         input_hist_enc_tile = input_hist_enc.repeat(1, 1, in_w, in_h)
-        # (batch, 64, w2, h2)
+        # (batch, 64, h2, w2)
         if not self.use_seg:
             ref_hist_enc_tile = ref_hist_enc.repeat(1, 1, ref_w, ref_h)
 
@@ -87,19 +87,19 @@ class DCT(pl.LightningModule):
             sw_hist_enc = self.HEN(
                 ref_segwise_hist.view(-1, self.l_bin + 1, self.ab_bin, self.ab_bin)
             ).view(batch_size, -1, 64, 1, 1)
-            # tiled encoded segwise histogram(batch, nsl, 64, w1, h1)
+            # tiled encoded segwise histogram(batch, nsl, 64, h1, w1)
             sw_hist_enc_tile = sw_hist_enc.repeat(1, 1, 1, in_w, in_h)
             # * Replace common seg area value
-            # (batch, 1, w1, h1)
+            # (batch, 1, h1, w1)
             common_mask = in_common_seg.sum(dim=1).unsqueeze(1)
-            # ( batch, 64, w1, h1)
+            # ( batch, 64, h1, w1)
             common_mask = common_mask.repeat(1, ref_hist_enc.size(1), 1, 1)
             in_common_seg = in_common_seg.unsqueeze(2).repeat(
                 1, 1, sw_hist_enc_tile.size(2), 1, 1
             )
 
             replace_value = (sw_hist_enc_tile * in_common_seg).sum(dim=1)
-            # (batch, 64, w1, h1)
+            # (batch, 64, h1, w1)
             ref_hist_enc_tile = ref_hist_enc.repeat(1, 1, in_w, in_h)
 
             # print(sw_hist_enc_tile.size(), in_common_seg.size(), common_mask.size())
