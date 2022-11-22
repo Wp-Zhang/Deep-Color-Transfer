@@ -1,10 +1,26 @@
-l_bin: 64
-ab_bin: 64
-use_seg: true
-init_method: "Normal"
-lambda1: 1.5
-lambda2: 0.5
+model_args:
+  use_seg: true
+  hist_channels: 64
+  init_method: Normal
+  CTN_enc_hidden_list: [64, 128, 256, 512, 512]
+  CTN_dec_hidden_list: [512, 256, 128, 64, 64]
+  HEN_hidden: 128
 
-learning_rate: 0.00005
-beta1: 0.5
-beta2: 0.999
+optimizer_args:
+  loss_lambda1: 1.5
+  loss_lambda2: 0.5
+  learning_rate: 0.00005
+  beta1: 0.5
+  beta2: 0.999
+
+dataset_args:
+  raw_dir: data/raw
+  processed_dir: data/processed
+
+  resize_dim: [512, 512]
+  l_bin: 64
+  ab_bin: 64
+  num_classes: 50
+
+  batch_size: 2
+  num_workers: 6

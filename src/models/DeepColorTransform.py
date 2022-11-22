@@ -7,11 +7,28 @@ from .ColorTransferNetwork import get_CTN
 from .HistogramEncodingNetwork import get_HEN
 from .LearnableHistogram import LearnableHistogram
 
-from box import Box
+from typing import List
 
 
 class DCT(pl.LightningModule):
-    def __init__(self, cfg_path: str):
+    def __init__(
+        self,
+        # * Model parameters
+        l_bin: int,
+        ab_bin: int,
+        use_seg: bool,
+        hist_channels: int,
+        init_method: str,
+        CTN_enc_hidden_list: List[int],
+        CTN_dec_hidden_list: List[int],
+        HEN_hidden: int,
+        # * Optimization parameters
+        loss_lambda1: float,
+        loss_lambda2: float,
+        learning_rate: float,
+        beta1: float,
+        beta2: float,
+    ):
         """Initialize a Deep Color Transfer model.
 
         Parameters
@@ -21,35 +38,37 @@ class DCT(pl.LightningModule):
         """
         super(DCT, self).__init__()
 
-        cfg = Box.from_yaml(open(cfg_path, "r").read())
-
         # * ---------------- Model hyper-parameters ---------------
-        self.l_bin = cfg.l_bin
-        self.ab_bin = cfg.ab_bin
-        self.use_seg = cfg.use_seg
-        self.init_method = cfg.init_method
+        self.l_bin = l_bin
+        self.ab_bin = ab_bin
+        self.use_seg = use_seg
+        self.init_method = init_method
         # * value in original implementation is 30, change to 32 for easier calculation
         self.pad = 32
-        self.hist_channels = 64
+        self.hist_channels = hist_channels
+        self.HEN_hidden = HEN_hidden
 
         # * ----------------- Training parameters -----------------
-        self.lambda1 = cfg.lambda1
-        self.lambda2 = cfg.lambda2
-        self.learning_rate = cfg.learning_rate  # 5e-5
-        self.beta1 = cfg.beta1  # 0.5
-        self.beta2 = cfg.beta2  # 0.999
+        self.loss_lambda1 = loss_lambda1
+        self.loss_lambda2 = loss_lambda2
+        self.learning_rate = learning_rate  # 5e-5
+        self.beta1 = beta1  # 0.5
+        self.beta2 = beta2  # 0.999
 
         # * -------------------- Define models --------------------
         self.HEN = get_HEN(
-            in_channels=self.l_bin + 1,
-            out_channels=self.hist_channels,
-            init_method=self.init_method,
+            in_channels=l_bin + 1,
+            out_channels=hist_channels,
+            hidden=HEN_hidden,
+            init_method=init_method,
         )
         self.CTN = get_CTN(
             in_channels=3,
             out_channels=3,
-            hist_channels=self.hist_channels,
-            init_method=self.init_method,
+            hist_channels=hist_channels,
+            enc_hidden_list=CTN_enc_hidden_list,
+            dec_hidden_list=CTN_dec_hidden_list,
+            init_method=init_method,
         )
         self.histogram = LearnableHistogram(3)
 
@@ -109,20 +128,20 @@ class DCT(pl.LightningModule):
             )
 
         # * -------------------- padding result -------------------
-        # (batch, 64, w1+2*pad, h1+2*pad)
+        # (batch, 64, h1+2*pad, w1+2*pad)
         in_HEN_out = self._rep_pad(input_hist_enc_tile)
         tar_HEN_out = self._rep_pad(ref_hist_enc_tile)
 
         # * ========================= CTN =========================
 
-        upsample1, upsample2, upsample3, upsample4, out_img = self.CTN(
-            self._rep_pad(in_img), in_HEN_out, tar_HEN_out
-        )
+        CTN_out = self.CTN(self._rep_pad(in_img), in_HEN_out, tar_HEN_out)
 
         # * =================== return result =====================
-
+        out_img = CTN_out[-1]
         out_img = self._unpad(out_img, self.pad)
-        return upsample1, upsample2, upsample3, upsample4, out_img
+        CTN_out[-1] = out_img
+
+        return CTN_out
 
     def _rep_pad(self, tensor: torch.Tensor) -> torch.Tensor:
         """Replication padding
@@ -160,22 +179,17 @@ class DCT(pl.LightningModule):
 
     def forward(self, x):
         in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist = x
-        _, _, _, _, out = self._forward(
+        output = self._forward(
             in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist
         )
-        return out
+        return output[-1]
 
     # * ===================== training related ====================
 
     def calc_loss(
-        self,
-        label_img: torch.Tensor,
-        upsample1: torch.Tensor,
-        upsample2: torch.Tensor,
-        upsample3: torch.Tensor,
-        upsample4: torch.Tensor,
-        out_img: torch.Tensor,
+        self, label_img: torch.Tensor, decoder_out: List[torch.Tensor]
     ) -> torch.Tensor:
+        out_img = decoder_out[-1]
         # * image loss
         img_loss = F.mse_loss(out_img, label_img)
 
@@ -183,25 +197,17 @@ class DCT(pl.LightningModule):
         hist_loss = F.mse_loss(self.histogram(out_img), self.histogram(label_img))
 
         # * multi-scale loss
-        us1 = self._unpad(upsample1, 2)
-        us2 = self._unpad(upsample2, 4)
-        us3 = self._unpad(upsample3, 8)
-        us4 = self._unpad(upsample4, 16)
-
-        lbl1 = T.Resize((us1.size()[-2:]))(label_img)
-        lbl2 = T.Resize((us2.size()[-2:]))(label_img)
-        lbl3 = T.Resize((us3.size()[-2:]))(label_img)
-        lbl4 = T.Resize((us4.size()[-2:]))(label_img)
-
-        multi_loss = (
-            F.mse_loss(us1, lbl1)
-            + F.mse_loss(us2, lbl2)
-            + F.mse_loss(us3, lbl3)
-            + F.mse_loss(us4, lbl4)
-        ) / 4
+        multi_loss = 0
+        for i, dec_out in enumerate(decoder_out[:-1][::-1]):
+            upsample = self._unpad(dec_out, self.pad // 2 ** (i + 1))
+            label = T.Resize(upsample.size()[-2:])(label_img)
+            multi_loss += F.mse_loss(upsample, label)
+        multi_loss /= len(decoder_out) - 1
 
         # * total
-        final_loss = img_loss + self.lambda1 * hist_loss + self.lambda2 * multi_loss
+        final_loss = (
+            img_loss + self.loss_lambda1 * hist_loss + self.loss_lambda2 * multi_loss
+        )
 
         return final_loss
 
@@ -214,7 +220,7 @@ class DCT(pl.LightningModule):
         )
 
         # * calculate loss
-        loss = self.calc_loss(ref_img, *decoder_out)
+        loss = self.calc_loss(ref_img, decoder_out)
 
         self.log("train_loss", loss)
         return loss
@@ -228,7 +234,7 @@ class DCT(pl.LightningModule):
         )
 
         # * calculate loss
-        loss = self.calc_loss(ref_img, *decoder_out)
+        loss = self.calc_loss(ref_img, decoder_out)
 
         self.log("val_loss", loss, prog_bar=True)
 
