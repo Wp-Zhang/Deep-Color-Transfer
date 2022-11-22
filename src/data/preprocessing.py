@@ -203,7 +203,7 @@ def gen_common_seg_map(
 
     input_oh = one_hot(input_seg, num_classes)  # (num_labels, w1, h1)
     input_oh[~np.isin(np.arange(num_classes), common), :, :] = 0
-
+    input_oh = input_oh.astype("uint8")
     return input_oh
 
 
