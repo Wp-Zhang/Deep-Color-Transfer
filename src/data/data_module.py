@@ -7,16 +7,14 @@ from .dataset import Adobe5kDataset
 
 
 class Adobe5kDataModule(LightningDataModule):
-    def __init__(self, data_dir: str, batch_size: int):
+    def __init__(self, data_dir: str, batch_size: int, num_workers: int):
         super().__init__()
 
         self.data_dir = Path(data_dir)
         self.batch_size = batch_size
+        self.num_workers = num_workers
 
         self.transform = None
-
-    # def prepare_data(self):
-    #     pass
 
     def setup(self, stage=None):
 
@@ -30,10 +28,25 @@ class Adobe5kDataModule(LightningDataModule):
             self.adb5k_test = Adobe5kDataset(str(self.data_dir / "test"))
 
     def train_dataloader(self):
-        return DataLoader(self.adb5k_train, batch_size=self.batch_size)
+        return DataLoader(
+            self.adb5k_train,
+            shuffle=True,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+        )
 
     def val_dataloader(self):
-        return DataLoader(self.adb5k_val, batch_size=self.batch_size)
+        return DataLoader(
+            self.adb5k_val,
+            shuffle=False,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+        )
 
     def test_dataloader(self):
-        return DataLoader(self.adb5k_test, batch_size=self.batch_size)
+        return DataLoader(
+            self.adb5k_test,
+            shuffle=False,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+        )
