@@ -1,3 +1,3 @@
-from .data_module import Adobe5kDataModule
-from .dataset import Adobe5kDataset
-from .preprocessing import preprocess_dataset, preprocess_imgs
+from .data_module import Adobe5kDataModule, TestDataModule
+from .dataset import Adobe5kDataset, TestDataset
+from .preprocessing import process_trainset

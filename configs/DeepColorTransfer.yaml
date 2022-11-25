@@ -13,6 +13,13 @@ optimizer_args:
   beta1: 0.5
   beta2: 0.999
 
+trainer_args:
+  accelerator: gpu
+  devices: 1
+  max_epochs: 200
+  precision: 16 # 32 or 16
+  ckpt_dir: output/lightning_ckpt
+
 dataset_args:
   raw_dir: data/raw
   processed_dir: data/processed
@@ -20,7 +27,7 @@ dataset_args:
   resize_dim: [512, 512]
   l_bin: 64
   ab_bin: 64
-  num_classes: 50
+  num_classes: 150
 
   batch_size: 2
-  num_workers: 6
+  num_workers: 8
