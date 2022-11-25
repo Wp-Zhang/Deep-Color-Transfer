@@ -31,6 +31,7 @@ class UNetEncoder(nn.Module):
             else:
                 last_hidden = hidden_list[i - 1]
                 self.enc.append(self.build_block(last_hidden, hidden, False))
+        self.enc = nn.ModuleList(self.enc)
 
     def build_block(self, in_channels, out_channels, is_first):
         if is_first:
@@ -125,6 +126,7 @@ class UNetDecoder(nn.Module):
                 [enc_hidden * 2 + hist_nc * 2, dec_hidden, dec_hidden, dec_hidden]
             )  # TODO a little different with the original version
             self.dec.append(block)
+        self.dec = nn.ModuleList(self.dec)
 
     def forward(self, enc_list, hist_enc1, hist_enc2, input_img):
         out_list = []
@@ -232,6 +234,7 @@ class ColorTransferNetwork(nn.Module):
         for hidden in dec_hidden_list[:-1]:
             block = self.build_output_block(hidden, out_channels)
             self.output_blocks.append(block)
+        self.output_blocks = nn.ModuleList(self.output_blocks)
 
     def build_output_block(self, in_channels: int, out_channels: int):
         """Build output block of each U-Net decoder block
