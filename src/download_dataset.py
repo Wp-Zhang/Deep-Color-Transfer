@@ -5,6 +5,9 @@ import rawpy
 from PIL import Image
 from tqdm import tqdm
 from joblib import Parallel, delayed
+import warnings
+
+warnings.filterwarnings("ignore")
 
 
 def dng_to_png(img_path: str):
@@ -37,11 +40,11 @@ def download_img(img_name: str, data_dir: Path):
             open(path, "wb").write(tif_file.content)
             tif_to_png(str(path))
 
-    except:
-        print(img_name)
+    except Exception as e:
+        print(img_name, e)
 
 
-def download_dataset(info_dir: Path, store_dir: Path, n_jobs: int = 8):
+def download_dataset(store_dir: Path, n_jobs: int = 8):
     # * Create folders
     dng_dir = store_dir / "raw"
     tif_dirs = [store_dir / s for s in ["a", "b", "c", "d", "e"]]
@@ -51,10 +54,12 @@ def download_dataset(info_dir: Path, store_dir: Path, n_jobs: int = 8):
         path.mkdir(parents=True, exist_ok=True)
 
     # * Get image info
-    with open(info_dir / "filesAdobe.txt", "r") as f:
-        f1 = f.read().split("\n")
-    with open(info_dir / "filesAdobeMIT.txt", "r") as f:
-        f2 = f.read().split("\n")
+    f1 = requests.get(
+        "https://data.csail.mit.edu/graphics/fivek/legal/filesAdobe.txt"
+    ).text.split("\n")
+    f2 = requests.get(
+        "https://data.csail.mit.edu/graphics/fivek/legal/filesAdobeMIT.txt"
+    ).text.split("\n")
     names = [x for x in set(f1 + f2) if x != ""]
 
     # * Download imgs
@@ -63,6 +68,5 @@ def download_dataset(info_dir: Path, store_dir: Path, n_jobs: int = 8):
 
 
 if __name__ == "__main__":
-    info_dir = Path("data/raw")
     store_dir = Path("data/raw/adobe_5k")
-    download_dataset(info_dir, store_dir)
+    download_dataset(store_dir, n_jobs=16)
