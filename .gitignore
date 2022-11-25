@@ -5,6 +5,8 @@ docs/resources/_gen
 data/**/*.png
 data/**/*.jpg
 data/**/*.npy
+tests/test_data/processed
+wandb
 
 **/__pycache__/
 notebooks/lightning_logs
