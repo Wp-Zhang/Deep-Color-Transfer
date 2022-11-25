@@ -42,6 +42,7 @@ class LearnableHistogram(nn.Module):
             conv.weight[:, i, :, :] = 1
 
             self.conv1.append(conv)
+        self.conv1 = nn.ModuleList(self.conv1)
 
         # * Conv2
         self.conv2 = nn.Conv2d(num_classes * bin, num_classes * bin, kernel_size=(1, 1))
