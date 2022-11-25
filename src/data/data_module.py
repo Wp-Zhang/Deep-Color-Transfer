@@ -20,12 +20,12 @@ class Adobe5kDataModule(LightningDataModule):
 
         # Assign train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
-            trainset = Adobe5kDataset(str(self.data_dir / "train"))
+            trainset = Adobe5kDataset(str(self.data_dir))
             self.adb5k_train, self.adb5k_val = random_split(trainset, [0.8, 0.2])
 
         # Assign test dataset for use in dataloader(s)
-        if stage == "test" or stage is None:
-            self.adb5k_test = Adobe5kDataset(str(self.data_dir / "test"))
+        # if stage == "test" or stage is None:
+        #     self.adb5k_test = Adobe5kDataset(str(self.data_dir / "test"))
 
     def train_dataloader(self):
         return DataLoader(
@@ -43,10 +43,10 @@ class Adobe5kDataModule(LightningDataModule):
             num_workers=self.num_workers,
         )
 
-    def test_dataloader(self):
-        return DataLoader(
-            self.adb5k_test,
-            shuffle=False,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-        )
+    # def test_dataloader(self):
+    #     return DataLoader(
+    #         self.adb5k_test,
+    #         shuffle=False,
+    #         batch_size=self.batch_size,
+    #         num_workers=self.num_workers,
+    #     )
