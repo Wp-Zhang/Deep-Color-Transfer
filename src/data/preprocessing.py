@@ -1,4 +1,4 @@
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Union
 import numpy as np
 import cv2
 from pathlib import Path
@@ -178,7 +178,7 @@ def one_hot(seg: "np.ndarray[int]", num_classes: int) -> "np.ndarray[int]":
     return (res == mask).astype(int)
 
 
-def gen_common_seg_map(
+def get_common_seg_map(
     input_seg: "np.ndarray[int]", ref_seg: "np.ndarray[int]", num_classes: int
 ) -> "np.ndarray[int]":
     """Get intersection of two segmentation maps
@@ -210,12 +210,12 @@ def gen_common_seg_map(
 # * ===================================================
 
 
-def _preprocess_imgs(
+def preprocess_imgs(
     in_img: "np.ndarray[int]",
     in_seg: "np.ndarray[int]",
     ref_img: "np.ndarray[int]",
     ref_seg: "np.ndarray[int]",
-    resize_dim: Tuple[int, int],
+    resize_dim: Union[Tuple[int, int], None],
     l_bin: int,
     ab_bin: int,
     num_classes: int,
@@ -232,8 +232,8 @@ def _preprocess_imgs(
         Reference image
     ref_seg : np.ndarray[int]
         Segmentation map of reference image
-    resize_dim : Tuple[int, int]
-        Target resize dimension, (width, height)
+    resize_dim : Union[Tuple[int, int], None]
+        Target resize dimension, (height, width)
     l_bin : int
         Size of luminance bin
     ab_bin : int
@@ -252,10 +252,11 @@ def _preprocess_imgs(
     ref_img = cv2.cvtColor(ref_img, cv2.COLOR_RGB2LAB)
 
     # * Resize
-    in_img = cv2.resize(in_img, resize_dim, interpolation=cv2.INTER_NEAREST)
-    in_seg = cv2.resize(in_seg, resize_dim, interpolation=cv2.INTER_NEAREST)
-    ref_img = cv2.resize(ref_img, resize_dim, interpolation=cv2.INTER_NEAREST)
-    ref_seg = cv2.resize(ref_seg, resize_dim, interpolation=cv2.INTER_NEAREST)
+    if resize_dim is not None:
+        in_img = cv2.resize(in_img, resize_dim, interpolation=cv2.INTER_NEAREST)
+        in_seg = cv2.resize(in_seg, resize_dim, interpolation=cv2.INTER_NEAREST)
+        ref_img = cv2.resize(ref_img, resize_dim, interpolation=cv2.INTER_NEAREST)
+        ref_seg = cv2.resize(ref_seg, resize_dim, interpolation=cv2.INTER_NEAREST)
 
     # * Get histogram
     in_hist = get_histogram(in_img.transpose(2, 0, 1), l_bin, ab_bin)
@@ -264,7 +265,7 @@ def _preprocess_imgs(
         ref_img.transpose(2, 0, 1), l_bin, ab_bin, ref_seg, num_classes
     )
 
-    in_common_seg = gen_common_seg_map(in_seg, ref_seg, num_classes)
+    in_common_seg = get_common_seg_map(in_seg, ref_seg, num_classes)
 
     return {
         "in_img": in_img,
@@ -278,7 +279,7 @@ def _preprocess_imgs(
     }
 
 
-def _preprocess_single_pair(
+def preprocess_single_pair(
     i,
     in_img_paths,
     in_seg_paths,
@@ -295,7 +296,7 @@ def _preprocess_single_pair(
     ref_img = cv2.imread(str(ref_img_paths[i]))
     ref_seg = np.load(ref_seg_paths[i])[0]
 
-    res = _preprocess_imgs(
+    res = preprocess_imgs(
         in_img,
         in_seg,
         ref_img,
@@ -394,7 +395,7 @@ def preprocess_dataset(
 
         parallel = Parallel(n_jobs=n_jobs, backend="multiprocessing")
         parallel(
-            delayed(_preprocess_single_pair)(
+            delayed(preprocess_single_pair)(
                 i,
                 in_img_paths,
                 in_seg_paths,

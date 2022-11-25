@@ -1,31 +1,37 @@
 from torch.utils.data import DataLoader, random_split
-
-# import torchvision.transforms as T
 from pytorch_lightning import LightningDataModule
 from pathlib import Path
+from typing import Union
 from .dataset import Adobe5kDataset
 
 
 class Adobe5kDataModule(LightningDataModule):
-    def __init__(self, data_dir: str, batch_size: int, num_workers: int):
+    def __init__(
+        self,
+        trainset_dir: str,
+        batch_size: int,
+        num_workers: int = 8,
+        testset_dir: Union[str, None] = None,
+    ):
         super().__init__()
 
-        self.data_dir = Path(data_dir)
+        self.trainset_dir = trainset_dir
         self.batch_size = batch_size
         self.num_workers = num_workers
 
-        self.transform = None
+        self.testset_dir = testset_dir
+        if testset_dir is not None:
+            self.testset_dir = testset_dir
 
     def setup(self, stage=None):
-
-        # Assign train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
-            trainset = Adobe5kDataset(str(self.data_dir))
+            trainset = Adobe5kDataset(self.trainset_dir)
             self.adb5k_train, self.adb5k_val = random_split(trainset, [0.8, 0.2])
 
-        # Assign test dataset for use in dataloader(s)
-        # if stage == "test" or stage is None:
-        #     self.adb5k_test = Adobe5kDataset(str(self.data_dir / "test"))
+        if stage == "predict":
+            if self.testset_dir:
+                raise ValueError("Testset dir not defined")
+            self.adb5k_pred = Adobe5kDataset(self.testset_dir)
 
     def train_dataloader(self):
         return DataLoader(
@@ -43,10 +49,10 @@ class Adobe5kDataModule(LightningDataModule):
             num_workers=self.num_workers,
         )
 
-    # def test_dataloader(self):
-    #     return DataLoader(
-    #         self.adb5k_test,
-    #         shuffle=False,
-    #         batch_size=self.batch_size,
-    #         num_workers=self.num_workers,
-    #     )
+    def predict_dataloader(self):
+        return DataLoader(
+            self.adb5k_pred,
+            shuffle=False,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+        )

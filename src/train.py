@@ -17,7 +17,7 @@ if __name__ == "__main__":
     dataset_args = cfg.dataset_args
 
     dm = Adobe5kDataModule(
-        data_dir=dataset_args.processed_dir,
+        trainset_dir=dataset_args.processed_dir,
         batch_size=dataset_args.batch_size,
         num_workers=dataset_args.num_workers,
     )
