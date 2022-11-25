@@ -2,9 +2,9 @@ model_args:
   use_seg: true
   hist_channels: 64
   init_method: Normal
-  CTN_enc_hidden_list: [64, 128, 256, 512, 512]
-  CTN_dec_hidden_list: [512, 256, 128, 64, 64]
-  HEN_hidden: 128
+  CTN_enc_hidden_list: [64, 64]
+  CTN_dec_hidden_list: [64, 64]
+  HEN_hidden: 32
 
 optimizer_args:
   loss_lambda1: 1.5
@@ -14,7 +14,7 @@ optimizer_args:
   beta2: 0.999
 
 trainer_args:
-  accelerator: gpu
+  accelerator: cpu
   devices: 1
   max_epochs: 200
   precision: 16 # 32 or 16
@@ -27,7 +27,7 @@ dataset_args:
   resize_dim: [512, 512]
   l_bin: 64
   ab_bin: 64
-  num_classes: 150
+  num_classes: 50
 
   batch_size: 2
   num_workers: 8

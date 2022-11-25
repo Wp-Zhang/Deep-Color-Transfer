@@ -178,10 +178,7 @@ class DCT(pl.LightningModule):
         return img
 
     def forward(self, x):
-        in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist = x
-        output = self._forward(
-            in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist
-        )
+        output = self._forward(*x)
         return output[-1]
 
     # * ===================== training related ====================
@@ -243,3 +240,8 @@ class DCT(pl.LightningModule):
             self.parameters(), lr=self.learning_rate, betas=(self.beta1, self.beta2)
         )
         return optimizer
+
+    # * predicting related
+
+    def predict_step(self, batch, batch_idx):
+        return self(batch)

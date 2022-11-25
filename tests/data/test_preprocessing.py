@@ -1,14 +1,12 @@
-import pytest
 import torch
 import numpy as np
-import shutil
 import random
 from src.data.preprocessing import (
     get_histogram,
     get_segwise_hist,
     one_hot,
-    gen_common_seg_map,
-    preprocess_dataset,
+    get_common_seg_map,
+    process_trainset,
 )
 import os
 
@@ -39,7 +37,7 @@ def test_one_hot():
     assert res.shape == (10, *seg.shape)
 
 
-def test_gen_common_seg_map():
+def test_get_common_seg_map():
     seg1 = np.array([[1, 2, 3, 4], [0, 1, 4, 3]])
     seg2 = np.array([[0, 2, 3], [0, 0, 0]])
 
@@ -52,20 +50,22 @@ def test_gen_common_seg_map():
             [[0, 0, 0, 0], [0, 0, 0, 0]],
         ]
     )
-    res = gen_common_seg_map(seg1, seg2, 5)
+    res = get_common_seg_map(seg1, seg2, 5)
     assert res.shape == (5, *seg1.shape)
     assert np.sum(expected - res, axis=None) == 0
 
+    res2 = get_common_seg_map(seg2, seg2, 5)
+    expected = one_hot(seg2, 5)
+    assert np.sum(res2 - expected, axis=None) == 0
+
 
 def test_dataset_preprocessing():
-    folder_name = random.randint(0, 10000)
-    preprocess_dataset(
-        raw_dir="./data/raw",
-        processed_dir=f"./data/processed_{folder_name}/",
-        resize_dim=(10, 10),
-        l_bin=5,
-        ab_bin=5,
-        num_classes=50,
+    process_trainset(
+        raw_dir="tests/test_data/raw",
+        processed_dir=f"tests/test_data/processed",
+        resize_dim=(512, 512),
+        l_bin=64,
+        ab_bin=64,
         n_jobs=1,
     )
-    shutil.rmtree(f"./data/processed_{folder_name}")
+    # shutil.rmtree(f"./data/processed_{folder_name}")

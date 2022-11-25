@@ -1,8 +1,10 @@
-import torch
 from pytorch_lightning import Trainer
+from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.loggers import WandbLogger
 from box import Box
 import sys
 import warnings
+import argparse
 
 sys.path.append("./")
 warnings.filterwarnings("ignore")
@@ -11,13 +13,33 @@ from src.models import DCT
 from src.data import Adobe5kDataModule
 
 if __name__ == "__main__":
-    cfg = Box.from_yaml(open("configs/DeepColorTransfer.yaml", "r").read())
+    # * Load config and dataset info
+    parser = argparse.ArgumentParser(
+        description="Train DCT model on specified dataset."
+    )
+    parser.add_argument(
+        "--config",
+        default="configs/DeepColorTransfer.yaml",
+        help="path to the configuration file",
+    )
+    parser.add_argument(
+        "--name",
+        default=None,
+        help="W&B runner name",
+    )
+    args = parser.parse_args()
+
+    cfg = Box.from_yaml(open(args.config, "r").read())
     model_args = cfg.model_args
     optimizer_args = cfg.optimizer_args
     dataset_args = cfg.dataset_args
+    trainer_args = cfg.trainer_args
 
     dm = Adobe5kDataModule(
-        data_dir=dataset_args.processed_dir,
+        trainset_dir=dataset_args.processed_dir,
+        l_bin=dataset_args.l_bin,
+        ab_bin=dataset_args.ab_bin,
+        num_classes=dataset_args.num_classes,
         batch_size=dataset_args.batch_size,
         num_workers=dataset_args.num_workers,
     )
@@ -28,10 +50,26 @@ if __name__ == "__main__":
         **optimizer_args
     )
 
-    trainer = Trainer(
-        max_epochs=3,
-        accelerator="auto",
-        devices=1 if torch.cuda.is_available() else None,
+    wandb_logger = WandbLogger(project="Deep Color Transform", name=args.name)
+    try:
+        wandb_logger.experiment.config.update(cfg.to_dict())
+    except:
+        pass
+
+    checkpoint_callback = ModelCheckpoint(
+        dirpath=trainer_args.ckpt_dir, filename="DCT-{epoch:02d}-{loss:.2f}"
     )
+    trainer = Trainer(
+        accelerator=trainer_args.accelerator,
+        devices=trainer_args.devices,
+        max_epochs=trainer_args.max_epochs,
+        sync_batchnorm=True,
+        strategy="ddp_find_unused_parameters_false",
+        num_nodes=1,
+        precision=trainer_args.precision,
+        callbacks=[checkpoint_callback],
+        logger=wandb_logger,
+    )
+
     # Pass the datamodule as arg to trainer.fit to override model hooks :)
     trainer.fit(model, dm)
