@@ -24,7 +24,7 @@ dataset_args:
   raw_dir: data/raw
   processed_dir: data/processed
 
-  resize_dim: [512, 512]
+  resize_dim: [256, 256]
   l_bin: 64
   ab_bin: 64
   num_classes: 150
