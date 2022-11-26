@@ -195,12 +195,10 @@ def _process_img(
     seg = cv2.resize(seg, resize_dim, interpolation=cv2.INTER_NEAREST)
 
     postfix = f"_{expert_no}" if expert_no is not None else ""
-    if expert_no is not None:
-        np.save(save_root / "ref_imgs" / f"{id}{postfix}.npy", img.astype("uint8"))
-        np.save(save_root / "ref_hist" / f"{id}{postfix}.npy", hist)
-    else:
-        np.save(save_root / "in_imgs" / f"{id}{postfix}.npy", img.astype("uint8"))
-        np.save(save_root / "in_hist" / f"{id}{postfix}.npy", hist)
+    np.save(save_root / "imgs" / f"{id}{postfix}.npy", img.astype("uint8"))
+    np.save(save_root / "hist" / f"{id}{postfix}.npy", hist)
+    np.save(save_root / "hist" / f"{id}{postfix}.npy", hist)
+    if expert_no is None:
         np.save(save_root / "segs" / f"{id}.npy", seg)
 
 
@@ -234,12 +232,10 @@ def process_trainset(
 
     # * Prepare folders
     seg_dir = processed_dir / "segs"
-    in_img_dir = processed_dir / "in_imgs"
-    in_hist_dir = processed_dir / "in_hist"
-    ref_img_dir = processed_dir / "ref_imgs"
-    ref_hist_dir = processed_dir / "ref_hist"
+    img_dir = processed_dir / "imgs"
+    hist_dir = processed_dir / "hist"
 
-    for dir in [seg_dir, in_img_dir, in_hist_dir, ref_img_dir, ref_hist_dir]:
+    for dir in [seg_dir, img_dir, hist_dir]:
         dir.mkdir(parents=True, exist_ok=True)
 
     # * Process input images
