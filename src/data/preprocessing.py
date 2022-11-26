@@ -192,6 +192,7 @@ def _process_img(
     img = cv2.resize(img, resize_dim, interpolation=cv2.INTER_NEAREST)
     hist = get_histogram(img.transpose(2, 0, 1), l_bin, ab_bin)
     seg = np.load(seg_dir / f"{id}.npy")
+    seg = cv2.resize(seg, resize_dim, interpolation=cv2.INTER_NEAREST)
 
     postfix = f"_{expert_no}" if expert_no is not None else ""
     if expert_no is not None:
