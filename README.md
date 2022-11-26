@@ -63,3 +63,35 @@ Project Organization
         │ 
         │
         └── visualization  <- Scripts to create exploratory and results oriented visualizations
+
+
+## Prepare dataset
+
+We've uploaded the datasets to Kaggle: [MIT-Adobe 5K Dataset](https://www.kaggle.com/datasets/weipengzhang/adobe-fivek), [Segmentation Results](https://www.kaggle.com/datasets/weipengzhang/beit2-adobe5k).
+
+1. Download these two datasets and extract them to `data/raw`, the data folder structure should be like this:
+   ```
+   data
+   └── raw
+      ├── adobe_5k
+      |   ├── a
+      |   ├── b
+      |   ├── c
+      |   ├── d
+      |   ├── e
+      |   └── raw
+      └── segs
+   ```
+
+2. In the project root folder, use the provided script to prepare trainset
+   ```
+   python src/prepare_dataset.py
+   ```
+   The script will use the default config file. However, you can specify your own config file by adding `--config PATH_TO_CONFIG`
+
+## Train the model
+In the project root folder, run the following
+```
+python src/train.py
+```
+You can also specify your own config file by adding `--config PATH_TO_CONFIG` and change the *[Weights&Biases](https://wandb.ai/)* runner name by adding `--name NEW_NAME`.
