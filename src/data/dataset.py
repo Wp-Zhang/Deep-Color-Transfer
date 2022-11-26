@@ -22,10 +22,8 @@ class Adobe5kDataset(Dataset):
 
         self.data_dir = Path(data_dir)
         self.seg_dir = self.data_dir / "segs"
-        self.in_img_dir = self.data_dir / "in_imgs"
-        self.in_hist_dir = self.data_dir / "in_hist"
-        self.ref_img_dir = self.data_dir / "ref_imgs"
-        self.ref_hist_dir = self.data_dir / "ref_hist"
+        self.img_dir = self.data_dir / "imgs"
+        self.hist_dir = self.data_dir / "hist"
 
         self.img_transform = T.Compose(
             [
@@ -46,10 +44,10 @@ class Adobe5kDataset(Dataset):
         ref_id = self.info["ref_img"].iloc[index]
         seg_id = self.info["seg"].iloc[index]
 
-        in_img = np.load(str(self.in_img_dir / f"{in_id}.npy"))
-        in_hist = np.load(str(self.in_hist_dir / f"{in_id}.npy"))
-        ref_img = np.load(str(self.ref_img_dir / f"{ref_id}.npy"))
-        ref_hist = np.load(str(self.ref_hist_dir / f"{ref_id}.npy"))
+        in_img = np.load(str(self.img_dir / f"{in_id}.npy"))
+        ref_img = np.load(str(self.img_dir / f"{ref_id}.npy"))
+        in_hist = np.load(str(self.hist_dir / f"{in_id}.npy"))
+        ref_hist = np.load(str(self.hist_dir / f"{ref_id}.npy"))
         seg = np.load(str(self.seg_dir / f"{seg_id}.npy"))
 
         in_common_seg = one_hot(seg, self.num_classes)
