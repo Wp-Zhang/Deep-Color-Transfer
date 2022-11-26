@@ -234,6 +234,7 @@ class DCT(pl.LightningModule):
         loss = self.calc_loss(ref_img, decoder_out)
 
         self.log("val_loss", loss, prog_bar=True)
+        return loss
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(
