@@ -14,21 +14,7 @@ Project Organization
     ├── README.md          <- The top-level README for developers using this project.
     ├── data
     |   ├── raw            <- Raw dataset directory
-    |   │   ├── train          <- Trainset
-    |   |   |   ├── input
-    |   |   |   |   ├── imgs   <- Input images
-    |   |   |   |   └── segs   <- Input image semantic segmentation results
-    |   |   |   └── reference
-    |   |   |       ├── imgs   <- Reference images
-    |   |   |       └── segs   <- Reference image semantic segmentation results
-    |   |   |
-    |   │   └── test           <- Testset
-    |   |       ├── input
-    |   |       |   ├── imgs   <- Input images
-    |   |       |   └── segs   <- Input image semantic segmentation results
-    |   |       └── reference
-    |   |           ├── imgs   <- Reference images
-    |   |           └── segs   <- Reference image semantic segmentation results
+    |   |
     |   └── processed      <- Processed dataset directory, ready for model training
     │
     ├── docs               <- Project website
@@ -42,27 +28,20 @@ Project Organization
     ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
     │
     ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
+    |   |
     │   └── figures        <- Generated graphics and figures to be used in reporting
     │
     ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
     │                         generated with `pip freeze > requirements.txt`
     │
     └── src                <- Source code for use in this project.
-        ├── __init__.py    <- Makes src a Python module
         │
         ├── data           <- Scripts to download or generate data
         │  
-        │
-        ├── features       <- Scripts to turn raw data into features for modeling
-        │  
-        │
         ├── models         <- Scripts to train models and then use trained models to make
         │                     predictions
-        │
-        ├── util           <- Scripts of tool functions
-        │ 
         │
-        └── visualization  <- Scripts to create exploratory and results oriented visualizations
+        └── util           <- Scripts of tool functions
 
 
 ## Prepare dataset
