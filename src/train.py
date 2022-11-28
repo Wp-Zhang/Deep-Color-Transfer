@@ -36,7 +36,8 @@ if __name__ == "__main__":
     trainer_args = cfg.trainer_args
 
     dm = Adobe5kDataModule(
-        trainset_dir=dataset_args.processed_dir,
+        trainset_dir=dataset_args.raw_dir,
+        img_dim=dataset_args.img_dim,
         l_bin=dataset_args.l_bin,
         ab_bin=dataset_args.ab_bin,
         num_classes=dataset_args.num_classes,

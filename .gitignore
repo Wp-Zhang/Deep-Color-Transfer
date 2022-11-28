@@ -5,9 +5,11 @@ docs/resources/_gen
 data/**/*.png
 data/**/*.jpg
 data/**/*.npy
+data/**/*.csv
 tests/test_data/processed
 wandb
 lightning_logs
+output/*
 
 **/__pycache__/
 notebooks/lightning_logs

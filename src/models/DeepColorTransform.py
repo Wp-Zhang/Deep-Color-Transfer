@@ -1,6 +1,8 @@
 import torch
 import torch.nn.functional as F
 import torchvision.transforms as T
+from skimage import color
+import numpy as np
 
 import pytorch_lightning as pl
 from .ColorTransferNetwork import get_CTN
@@ -8,6 +10,15 @@ from .HistogramEncodingNetwork import get_HEN
 from .LearnableHistogram import LearnableHistogram, get_histogram2d
 
 from typing import List
+
+
+def LAB2RGB(I):
+    l = I[:, :, 0] / 255.0 * 100.0
+    a = I[:, :, 1] / 255.0 * (98.2330538631 + 86.1830297444) - 86.1830297444
+    b = I[:, :, 2] / 255.0 * (94.4781222765 + 107.857300207) - 107.857300207
+
+    rgb = color.lab2rgb(np.dstack([l, a, b]).astype(np.float64))
+    return rgb
 
 
 class DCT(pl.LightningModule):
@@ -251,4 +262,14 @@ class DCT(pl.LightningModule):
     # * predicting related
 
     def predict_step(self, batch, batch_idx):
-        return self(batch)
+        out = self(batch)
+        # * Un-normalize
+        out = (out * 0.5 + 0.5) * 255
+
+        res = []
+        for img in out:
+            # * LAB2RGB
+            img = img.cpu().numpy()
+            img = LAB2RGB(img.transpose(1, 2, 0))
+            res.append(img)
+        return res
