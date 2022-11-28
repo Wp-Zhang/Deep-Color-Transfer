@@ -46,6 +46,7 @@ if __name__ == "__main__":
     model = DCT(
         l_bin=dataset_args.l_bin,
         ab_bin=dataset_args.ab_bin,
+        num_classes=dataset_args.num_classes,
         **model_args,
         **optimizer_args
     )
