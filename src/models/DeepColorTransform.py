@@ -1,13 +1,24 @@
 import torch
 import torch.nn.functional as F
 import torchvision.transforms as T
+from skimage import color
+import numpy as np
 
 import pytorch_lightning as pl
 from .ColorTransferNetwork import get_CTN
 from .HistogramEncodingNetwork import get_HEN
-from .LearnableHistogram import LearnableHistogram
+from .LearnableHistogram import LearnableHistogram, get_histogram2d
 
 from typing import List
+
+
+def LAB2RGB(I):
+    l = I[:, :, 0] / 255.0 * 100.0
+    a = I[:, :, 1] / 255.0 * (98.2330538631 + 86.1830297444) - 86.1830297444
+    b = I[:, :, 2] / 255.0 * (94.4781222765 + 107.857300207) - 107.857300207
+
+    rgb = color.lab2rgb(np.dstack([l, a, b]).astype(np.float64))
+    return rgb
 
 
 class DCT(pl.LightningModule):
@@ -16,6 +27,7 @@ class DCT(pl.LightningModule):
         # * Model parameters
         l_bin: int,
         ab_bin: int,
+        num_classes: int,
         use_seg: bool,
         hist_channels: int,
         init_method: str,
@@ -37,10 +49,12 @@ class DCT(pl.LightningModule):
             Config path.
         """
         super(DCT, self).__init__()
+        self.save_hyperparameters()
 
         # * ---------------- Model hyper-parameters ---------------
         self.l_bin = l_bin
         self.ab_bin = ab_bin
+        self.num_classes = num_classes
         self.use_seg = use_seg
         self.init_method = init_method
         # * value in original implementation is 30, change to 32 for easier calculation
@@ -70,7 +84,7 @@ class DCT(pl.LightningModule):
             dec_hidden_list=CTN_dec_hidden_list,
             init_method=init_method,
         )
-        self.histogram = LearnableHistogram(3)
+        self.histogram = LearnableHistogram(32)
 
     def _forward(
         self,
@@ -191,7 +205,10 @@ class DCT(pl.LightningModule):
         img_loss = F.mse_loss(out_img, label_img)
 
         # * histogram loss
-        hist_loss = F.mse_loss(self.histogram(out_img), self.histogram(label_img))
+        # hist_loss = F.mse_loss(self.histogram(out_img), self.histogram(label_img))
+        out_hist = get_histogram2d(out_img, self.histogram)
+        label_hist = get_histogram2d(label_img, self.histogram)
+        hist_loss = F.mse_loss(out_hist, label_hist)
 
         # * multi-scale loss
         multi_loss = 0
@@ -245,4 +262,14 @@ class DCT(pl.LightningModule):
     # * predicting related
 
     def predict_step(self, batch, batch_idx):
-        return self(batch)
+        out = self(batch)
+        # * Un-normalize
+        out = (out * 0.5 + 0.5) * 255
+
+        res = []
+        for img in out:
+            # * LAB2RGB
+            img = img.cpu().numpy()
+            img = LAB2RGB(img.transpose(1, 2, 0))
+            res.append(img)
+        return res

@@ -36,7 +36,8 @@ if __name__ == "__main__":
     trainer_args = cfg.trainer_args
 
     dm = Adobe5kDataModule(
-        trainset_dir=dataset_args.processed_dir,
+        trainset_dir=dataset_args.raw_dir,
+        img_dim=dataset_args.img_dim,
         l_bin=dataset_args.l_bin,
         ab_bin=dataset_args.ab_bin,
         num_classes=dataset_args.num_classes,
@@ -46,6 +47,7 @@ if __name__ == "__main__":
     model = DCT(
         l_bin=dataset_args.l_bin,
         ab_bin=dataset_args.ab_bin,
+        num_classes=dataset_args.num_classes,
         **model_args,
         **optimizer_args
     )
@@ -57,7 +59,7 @@ if __name__ == "__main__":
         pass
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath=trainer_args.ckpt_dir, filename="DCT-{epoch:02d}-{val_loss:.2f}"
+        dirpath=trainer_args.ckpt_dir, filename="DCT-{epoch:02d}-{val_loss:.4f}"
     )
     trainer = Trainer(
         accelerator=trainer_args.accelerator,
