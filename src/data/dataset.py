@@ -98,12 +98,19 @@ class Adobe5kDataset(Dataset):
 
 class TestDataset(Dataset):
     def __init__(
-        self, data_dir: str, l_bin: int, ab_bin: int, num_classes: int, use_seg: bool
+        self,
+        data_dir: str,
+        l_bin: int,
+        ab_bin: int,
+        num_classes: int,
+        use_seg: bool,
+        img_dim=(256, 256),
     ):
         super(Dataset, self).__init__()
 
         self.data_dir = Path(data_dir)
         self.use_seg = use_seg
+        self.img_dim = img_dim
 
         self.in_img_dir = self.data_dir / "in_imgs"
         self.ref_img_dir = self.data_dir / "ref_imgs"
@@ -135,12 +142,8 @@ class TestDataset(Dataset):
         in_img = Image.open(str(self.in_img_paths[index])).convert("RGB")
         ref_img = Image.open(str(self.ref_img_paths[index])).convert("RGB")
 
-        in_img = resize_and_central_crop(in_img, (128, 128))
-        ref_img = resize_and_central_crop(ref_img, (128, 128))
-
-        # ! Remove in the future
-        # in_img = resize_and_central_crop(in_img, (256, 256))
-        # ref_img = resize_and_central_crop(ref_img, (256, 256))
+        in_img = resize_and_central_crop(in_img, self.img_dim)
+        ref_img = resize_and_central_crop(ref_img, self.img_dim)
 
         in_img = self.img_transform(in_img).float()
         ref_img = self.img_transform(ref_img).float()
@@ -152,8 +155,8 @@ class TestDataset(Dataset):
             in_seg = np.load(str(self.in_seg_paths[index]))
             ref_seg = np.load(str(self.ref_seg_paths[index]))
 
-            in_seg = cv2.resize(in_seg, (128, 128), interpolation=cv2.INTER_NEAREST)
-            ref_seg = cv2.resize(ref_seg, (128, 128), interpolation=cv2.INTER_NEAREST)
+            in_seg = cv2.resize(in_seg, self.img_dim, interpolation=cv2.INTER_NEAREST)
+            ref_seg = cv2.resize(ref_seg, self.img_dim, interpolation=cv2.INTER_NEAREST)
 
             in_common_seg = get_common_seg_map(in_seg, ref_seg, self.num_classes)
             ref_seg_hist = get_segwise_hist(
