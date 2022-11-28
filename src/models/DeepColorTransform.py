@@ -251,6 +251,21 @@ class DCT(pl.LightningModule):
         loss = self.calc_loss(ref_img, decoder_out)
 
         self.log("val_loss", loss, prog_bar=True)
+
+        if batch_idx == 0:
+            in_img_demo = ((in_img[0] * 0.5 + 0.5) * 255).cpu().numpy()
+            ref_img_demo = ((ref_img[0] * 0.5 + 0.5) * 255).cpu().numpy()
+            out_demo = ((decoder_out[-1][0] * 0.5 + 0.5) * 255).cpu().numpy()
+            in_img_demo = LAB2RGB(in_img_demo.transpose(1, 2, 0))
+            ref_img_demo = LAB2RGB(ref_img_demo.transpose(1, 2, 0))
+            out_demo = LAB2RGB(out_demo.transpose(1, 2, 0))
+
+            self.logger.log_image(
+                key="samples",
+                images=[in_img_demo, ref_img_demo, out_demo],
+                caption=["Input", "Reference", "Output"],
+            )
+
         return loss
 
     def configure_optimizers(self):
