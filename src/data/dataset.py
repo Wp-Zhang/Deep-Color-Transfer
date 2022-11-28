@@ -135,19 +135,26 @@ class TestDataset(Dataset):
         in_img = Image.open(str(self.in_img_paths[index])).convert("RGB")
         ref_img = Image.open(str(self.ref_img_paths[index])).convert("RGB")
 
+        in_img = resize_and_central_crop(in_img, (128, 128))
+        ref_img = resize_and_central_crop(ref_img, (128, 128))
+
         # ! Remove in the future
         # in_img = resize_and_central_crop(in_img, (256, 256))
         # ref_img = resize_and_central_crop(ref_img, (256, 256))
 
-        in_hist = get_histogram(in_img.transpose(2, 0, 1), self.l_bin, self.ab_bin)
-        ref_hist = get_histogram(ref_img.transpose(2, 0, 1), self.l_bin, self.ab_bin)
-
         in_img = self.img_transform(in_img).float()
         ref_img = self.img_transform(ref_img).float()
+
+        in_hist = get_histogram(in_img.numpy(), self.l_bin, self.ab_bin)
+        ref_hist = get_histogram(ref_img.numpy(), self.l_bin, self.ab_bin)
 
         if self.use_seg:
             in_seg = np.load(str(self.in_seg_paths[index]))
             ref_seg = np.load(str(self.ref_seg_paths[index]))
+
+            in_seg = cv2.resize(in_seg, (128, 128), interpolation=cv2.INTER_NEAREST)
+            ref_seg = cv2.resize(ref_seg, (128, 128), interpolation=cv2.INTER_NEAREST)
+
             in_common_seg = get_common_seg_map(in_seg, ref_seg, self.num_classes)
             ref_seg_hist = get_segwise_hist(
                 ref_img.numpy(),
@@ -160,4 +167,11 @@ class TestDataset(Dataset):
             in_common_seg = np.array([])
             ref_seg_hist = np.array([])
 
-        return in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_seg_hist
+        return (
+            in_img,
+            torch.from_numpy(in_hist).float(),
+            in_common_seg,
+            ref_img,
+            torch.from_numpy(ref_hist).float(),
+            torch.from_numpy(ref_seg_hist).float(),
+        )
