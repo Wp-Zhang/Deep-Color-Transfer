@@ -1,0 +1,7 @@
+accelerator: gpu
+devices: 1
+use_seg: true
+num_workers: 8
+output_dir: output/test
+ckpt_path: output/lightning_ckpt/DCT-epoch=00-val_loss=0.0097.ckpt
+test_dir: data/test
