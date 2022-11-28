@@ -225,6 +225,13 @@ class DCT(pl.LightningModule):
 
         return final_loss
 
+    def _post_process_img(self, img: torch.Tensor):
+        img = (img * 0.5 + 0.5) * 255
+        img = img.cpu().numpy()
+        img = LAB2RGB(img.transpose(1, 2, 0))
+
+        return img
+
     def training_step(self, batch, batch_idx):
         in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist = batch
 
@@ -253,38 +260,29 @@ class DCT(pl.LightningModule):
         self.log("val_loss", loss, prog_bar=True)
 
         if batch_idx == 0:
-            in_img_demo = ((in_img[0] * 0.5 + 0.5) * 255).cpu().numpy()
-            ref_img_demo = ((ref_img[0] * 0.5 + 0.5) * 255).cpu().numpy()
-            out_demo = ((decoder_out[-1][0] * 0.5 + 0.5) * 255).cpu().numpy()
-            in_img_demo = LAB2RGB(in_img_demo.transpose(1, 2, 0))
-            ref_img_demo = LAB2RGB(ref_img_demo.transpose(1, 2, 0))
-            out_demo = LAB2RGB(out_demo.transpose(1, 2, 0))
+            in_img_demo = self._post_process_img(in_img[0])
+            ref_img_demo = self._post_process_img(ref_img_demo[0])
+            out_demo = self._post_process_img(decoder_out[-1][0])
 
             self.logger.log_image(
-                key="samples",
+                key="demo",
                 images=[in_img_demo, ref_img_demo, out_demo],
                 caption=["Input", "Reference", "Output"],
             )
 
         return loss
 
+    def predict_step(self, batch, batch_idx):
+        out = self(batch)
+
+        res = []
+        for img in out:
+            img = self._post_process_img(img)
+            res.append(img)
+        return res
+
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(
             self.parameters(), lr=self.learning_rate, betas=(self.beta1, self.beta2)
         )
         return optimizer
-
-    # * predicting related
-
-    def predict_step(self, batch, batch_idx):
-        out = self(batch)
-        # * Un-normalize
-        out = (out * 0.5 + 0.5) * 255
-
-        res = []
-        for img in out:
-            # * LAB2RGB
-            img = img.cpu().numpy()
-            img = LAB2RGB(img.transpose(1, 2, 0))
-            res.append(img)
-        return res
