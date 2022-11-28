@@ -30,7 +30,7 @@ class Adobe5kDataModule(LightningDataModule):
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            info = self.info
+            info = self.info[self.info["type"] == "train"].reset_index(drop=True)
             val_idx = list(range(0, info.shape[0], 5))
             train_info = info[~info.index.isin(val_idx)].reset_index(drop=True)
             val_info = info[info.index.isin(val_idx)].reset_index(drop=True)
@@ -51,12 +51,24 @@ class Adobe5kDataModule(LightningDataModule):
                 self.ab_bin,
                 self.num_classes,
             )
+
         if stage == "validate":
-            info = self.info
+            info = self.info[self.info["type"] == "train"].reset_index(drop=True)
             val_idx = list(range(0, info.shape[0], 5))
             val_info = info[info.index.isin(val_idx)].reset_index(drop=True)
             self.adb5k_val = Adobe5kDataset(
                 val_info,
+                self.trainset_dir,
+                self.img_dim,
+                self.l_bin,
+                self.ab_bin,
+                self.num_classes,
+            )
+
+        if stage == "fit" or stage == "validate" or stage is None:
+            demo_info = self.info[self.info["type"] == "test"].reset_index(drop=True)
+            self.adb5k_demo = Adobe5kDataset(
+                demo_info,
                 self.trainset_dir,
                 self.img_dim,
                 self.l_bin,
@@ -73,12 +85,20 @@ class Adobe5kDataModule(LightningDataModule):
         )
 
     def val_dataloader(self):
-        return DataLoader(
-            self.adb5k_val,
-            shuffle=False,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-        )
+        return [
+            DataLoader(
+                self.adb5k_val,
+                shuffle=False,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+            ),
+            DataLoader(
+                self.adb5k_demo,
+                shuffle=False,
+                batch_size=3,  # * same as # demo pictures
+                num_workers=self.num_workers,
+            ),
+        ]
 
 
 class TestDataModule(LightningDataModule):

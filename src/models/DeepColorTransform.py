@@ -1,10 +1,8 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as T
-from skimage import color
-import numpy as np
 
-import pytorch_lightning as pl
 from .ColorTransferNetwork import get_CTN
 from .HistogramEncodingNetwork import get_HEN
 from .LearnableHistogram import LearnableHistogram, get_histogram2d
@@ -12,16 +10,7 @@ from .LearnableHistogram import LearnableHistogram, get_histogram2d
 from typing import List
 
 
-def LAB2RGB(I):
-    l = I[:, :, 0] / 255.0 * 100.0
-    a = I[:, :, 1] / 255.0 * (98.2330538631 + 86.1830297444) - 86.1830297444
-    b = I[:, :, 2] / 255.0 * (94.4781222765 + 107.857300207) - 107.857300207
-
-    rgb = color.lab2rgb(np.dstack([l, a, b]).astype(np.float64))
-    return rgb
-
-
-class DCT(pl.LightningModule):
+class DeepColorTransfer(nn.Module):
     def __init__(
         self,
         # * Model parameters
@@ -34,22 +23,13 @@ class DCT(pl.LightningModule):
         CTN_enc_hidden_list: List[int],
         CTN_dec_hidden_list: List[int],
         HEN_hidden: int,
-        # * Optimization parameters
-        loss_lambda1: float,
-        loss_lambda2: float,
-        learning_rate: float,
-        beta1: float,
-        beta2: float,
     ):
         """Initialize a Deep Color Transfer model.
 
         Parameters
         ----------
-        cfg : str
-            Config path.
         """
-        super(DCT, self).__init__()
-        self.save_hyperparameters()
+        super(DeepColorTransfer, self).__init__()
 
         # * ---------------- Model hyper-parameters ---------------
         self.l_bin = l_bin
@@ -61,13 +41,6 @@ class DCT(pl.LightningModule):
         self.pad = 32
         self.hist_channels = hist_channels
         self.HEN_hidden = HEN_hidden
-
-        # * ----------------- Training parameters -----------------
-        self.loss_lambda1 = loss_lambda1
-        self.loss_lambda2 = loss_lambda2
-        self.learning_rate = learning_rate  # 5e-5
-        self.beta1 = beta1  # 0.5
-        self.beta2 = beta2  # 0.999
 
         # * -------------------- Define models --------------------
         self.HEN = get_HEN(
@@ -86,7 +59,7 @@ class DCT(pl.LightningModule):
         )
         self.histogram = LearnableHistogram(32)
 
-    def _forward(
+    def forward(
         self,
         in_img: torch.Tensor,  # (batch, 3, h1, w1)
         in_hist: torch.Tensor,  # (batch, l_bin+1, ab_bin, ab_bin)
@@ -191,21 +164,18 @@ class DCT(pl.LightningModule):
         img = img[..., pad : w - pad, pad : h - pad]
         return img
 
-    def forward(self, x):
-        output = self._forward(*x)
-        return output[-1]
-
-    # * ===================== training related ====================
-
     def calc_loss(
-        self, label_img: torch.Tensor, decoder_out: List[torch.Tensor]
+        self,
+        label_img: torch.Tensor,
+        decoder_out: List[torch.Tensor],
+        lambda1: float,
+        lambda2: float,
     ) -> torch.Tensor:
         out_img = decoder_out[-1]
         # * image loss
         img_loss = F.mse_loss(out_img, label_img)
 
         # * histogram loss
-        # hist_loss = F.mse_loss(self.histogram(out_img), self.histogram(label_img))
         out_hist = get_histogram2d(out_img, self.histogram)
         label_hist = get_histogram2d(label_img, self.histogram)
         hist_loss = F.mse_loss(out_hist, label_hist)
@@ -219,70 +189,6 @@ class DCT(pl.LightningModule):
         multi_loss /= len(decoder_out) - 1
 
         # * total
-        final_loss = (
-            img_loss + self.loss_lambda1 * hist_loss + self.loss_lambda2 * multi_loss
-        )
+        final_loss = img_loss + lambda1 * hist_loss + lambda2 * multi_loss
 
         return final_loss
-
-    def _post_process_img(self, img: torch.Tensor):
-        img = (img * 0.5 + 0.5) * 255
-        img = img.cpu().numpy()
-        img = LAB2RGB(img.transpose(1, 2, 0))
-
-        return img
-
-    def training_step(self, batch, batch_idx):
-        in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist = batch
-
-        # * forward
-        decoder_out = self._forward(
-            in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist
-        )
-
-        # * calculate loss
-        loss = self.calc_loss(ref_img, decoder_out)
-
-        self.log("train_loss", loss)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist = batch
-
-        # * forward
-        decoder_out = self._forward(
-            in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist
-        )
-
-        # * calculate loss
-        loss = self.calc_loss(ref_img, decoder_out)
-
-        self.log("val_loss", loss, prog_bar=True)
-
-        if batch_idx == 0:
-            in_img_demo = self._post_process_img(in_img[0])
-            ref_img_demo = self._post_process_img(ref_img_demo[0])
-            out_demo = self._post_process_img(decoder_out[-1][0])
-
-            self.logger.log_image(
-                key="demo",
-                images=[in_img_demo, ref_img_demo, out_demo],
-                caption=["Input", "Reference", "Output"],
-            )
-
-        return loss
-
-    def predict_step(self, batch, batch_idx):
-        out = self(batch)
-
-        res = []
-        for img in out:
-            img = self._post_process_img(img)
-            res.append(img)
-        return res
-
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(
-            self.parameters(), lr=self.learning_rate, betas=(self.beta1, self.beta2)
-        )
-        return optimizer

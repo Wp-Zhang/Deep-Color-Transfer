@@ -9,7 +9,7 @@ import argparse
 sys.path.append("./")
 warnings.filterwarnings("ignore")
 
-from src.models import DCT
+from src.models import Model
 from src.data import Adobe5kDataModule
 
 if __name__ == "__main__":
@@ -44,7 +44,7 @@ if __name__ == "__main__":
         batch_size=dataset_args.batch_size,
         num_workers=dataset_args.num_workers,
     )
-    model = DCT(
+    model = Model(
         l_bin=dataset_args.l_bin,
         ab_bin=dataset_args.ab_bin,
         num_classes=dataset_args.num_classes,

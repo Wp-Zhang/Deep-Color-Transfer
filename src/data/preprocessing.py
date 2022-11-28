@@ -18,21 +18,9 @@ def _get_ab_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
     np.ndarray
         Ab-space histogram
     """
-
-    # H = cv2.calcHist(
-    #     [img.astype(np.float32)],
-    #     channels=[1, 2],
-    #     mask=None,
-    #     histSize=[num_bin, num_bin],
-    #     ranges=[0, 255, 0, 255],
-    # )
-    # H = H[None, ...]
-    # H = H / np.sum(H, axis=None)
-
-    arr = img.copy()
     # Exclude Zeros and Make value 0 ~ 1
-    arr1 = (arr[1].ravel()[np.flatnonzero(arr[1])] + 1) / 2
-    arr2 = (arr[2].ravel()[np.flatnonzero(arr[2])] + 1) / 2
+    arr1 = (img[1].ravel()[np.flatnonzero(img[1])] + 1) / 2
+    arr2 = (img[2].ravel()[np.flatnonzero(img[2])] + 1) / 2
 
     if arr1.shape[0] != arr2.shape[0]:
         if arr2.shape[0] < arr1.shape[0]:
@@ -43,16 +31,12 @@ def _get_ab_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
     # AB space
     try:
         arr_new = [arr1, arr2]
-        H, edges = np.histogramdd(
-            arr_new, bins=[num_bin, num_bin], range=((0, 1), (0, 1))
-        )
+        H, _ = np.histogramdd(arr_new, bins=[num_bin, num_bin], range=((0, 1), (0, 1)))
     except Exception as e:
         print(e)
         print(arr1.shape, arr2.shape)
         arr_new = [arr1, arr2]
-        H, edges = np.histogramdd(
-            arr_new, bins=[num_bin, num_bin], range=((0, 1), (0, 1))
-        )
+        H, _ = np.histogramdd(arr_new, bins=[num_bin, num_bin], range=((0, 1), (0, 1)))
 
     H = np.rot90(H)
     H = np.flip(H, 0)
@@ -77,23 +61,11 @@ def _get_l_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
     np.ndarray
         Luminance histogram
     """
-    # H = cv2.calcHist(
-    #     [img.astype(np.float32)],
-    #     channels=[0],
-    #     mask=None,
-    #     histSize=[num_bin],
-    #     ranges=[0, 255],
-    # )
-
-    # H = H[..., None]
-    # H = H / np.sum(H, axis=None)
-
-    arr = img.copy()
-    arr0 = (arr[0].ravel()[np.flatnonzero(arr[0])] + 1) / 2
+    arr0 = (img[0].ravel()[np.flatnonzero(img[0])] + 1) / 2
     arr1 = np.zeros(arr0.size)
 
     arr_new = [arr0, arr1]
-    H, edges = np.histogramdd(arr_new, bins=[num_bin, 1], range=((0, 1), (-1, 2)))
+    H, _ = np.histogramdd(arr_new, bins=[num_bin, 1], range=((0, 1), (-1, 2)))
     H = H[None, ...].transpose(1, 0, 2)
 
     H = H / np.sum(H)
@@ -256,6 +228,7 @@ def get_dataset_info(raw_dir: str):
         tmp["in_img"] = "raw/" + tmp["in_img"]
         tmp["ref_img"] = ref_names
         tmp["ref_img"] = f"{expert}/" + tmp["ref_img"]
+
         info = pd.concat([info, tmp], ignore_index=True)
 
     # * identical pairs
@@ -270,4 +243,27 @@ def get_dataset_info(raw_dir: str):
         tmp["in_img"] = f"{expert}/" + tmp["in_img"]
         tmp["ref_img"] = f"{expert}/" + tmp["ref_img"]
         info = pd.concat([info, tmp], ignore_index=True)
+
+    info["type"] = "train"
+
+    # * Generate test demo for visualization during training process
+    in_imgs = ["raw/a0029-jmac_DSC3974.jpg" for _ in range(3)]
+    ref_imgs = [
+        "c/a0029-jmac_DSC3974.jpg",
+        "c/a0030-_MG_7844.jpg",
+        "raw/a4966-Duggan_090124_4744.jpg",
+    ]
+    segs = [
+        "a0029-jmac_DSC3974.npy",
+        "a0030-_MG_7844.npy",
+        "a4966-Duggan_090124_4744.npy",
+    ]
+    test_info = pd.DataFrame(columns=["in_img", "ref_img", "seg"])
+    test_info["seg"] = segs
+    test_info["in_img"] = in_imgs
+    test_info["ref_img"] = ref_imgs
+    test_info["type"] = "test"
+
+    info = pd.concat([info, test_info], ignore_index=True)
+
     info.to_csv(raw_dir / "dataset_info.csv", index=None)
