@@ -17,7 +17,7 @@ trainer_args:
   accelerator: gpu
   devices: 1
   max_epochs: 200
-  precision: 32 # 32 or 16
+  precision: 16 # 32 or 16
   ckpt_dir: output/lightning_ckpt
 
 dataset_args:
@@ -28,5 +28,5 @@ dataset_args:
   ab_bin: 64
   num_classes: 150
 
-  batch_size: 2
+  batch_size: 4
   num_workers: 8
