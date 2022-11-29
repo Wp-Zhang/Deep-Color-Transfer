@@ -92,7 +92,7 @@ class DeepColorTransfer(nn.Module):
             # encoded segwise histogram(batch, nsl, 64, 1, 1)
             sw_hist_enc = self.HEN(
                 ref_segwise_hist.view(-1, self.l_bin + 1, self.ab_bin, self.ab_bin)
-            ).view(batch_size, -1, 64, 1, 1)
+            ).view(batch_size, -1, self.hist_channels, 1, 1)
             # tiled encoded segwise histogram(batch, nsl, 64, h1, w1)
             sw_hist_enc_tile = sw_hist_enc.repeat(1, 1, 1, in_w, in_h)
             # * Replace common seg area value
