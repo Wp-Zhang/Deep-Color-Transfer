@@ -25,7 +25,7 @@ dataset_args:
   raw_dir: data/raw
 
   img_dim: [224, 224]
-  l_bin: 64
+  l_bin: 8
   ab_bin: 64
   num_classes: 150
 
