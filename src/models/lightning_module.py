@@ -108,7 +108,7 @@ class Model(pl.LightningModule):
             loss = self.model.calc_loss(
                 ref_img, decoder_out, self.loss_lambda1, self.loss_lambda2
             )
-            self.log("val_loss", loss, prog_bar=True)
+            self.log("val_loss", loss, prog_bar=True, sync_dist=True)
             return loss
 
         else:
