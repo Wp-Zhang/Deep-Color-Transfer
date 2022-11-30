@@ -2,6 +2,7 @@ from typing import List
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from timm import create_model
 
 from typing import List
 from ..util import init_weights
@@ -120,12 +121,19 @@ class UNetDecoder(nn.Module):
         super(UNetDecoder, self).__init__()
 
         self.dec = []
+        last_dec_hidden = enc_hidden_list[-1]
         for i, enc_hidden in enumerate(enc_hidden_list[::-1]):
             dec_hidden = dec_hidden_list[i]
             block = UNetDecoderBlock(
-                [enc_hidden * 2 + hist_nc * 2, dec_hidden, dec_hidden, dec_hidden]
+                [
+                    enc_hidden + last_dec_hidden + hist_nc * 2,
+                    dec_hidden,
+                    dec_hidden,
+                    dec_hidden,
+                ]
             )  # TODO a little different with the original version
             self.dec.append(block)
+            last_dec_hidden = dec_hidden
         self.dec = nn.ModuleList(self.dec)
 
     def forward(self, enc_list, hist_enc1, hist_enc2, input_img):
@@ -197,6 +205,7 @@ class ColorTransferNetwork(nn.Module):
         enc_hidden_list: List[int] = [64, 128, 256, 512, 512],
         dec_hidden_list: List[int] = [512, 256, 128, 64, 64],
         use_dropout: bool = False,
+        encoder: str = "Original",
     ):
         """Initialize a CTN
         Parameters
@@ -218,7 +227,10 @@ class ColorTransferNetwork(nn.Module):
         self.pre_refine_block = self.build_pre_refine_block(in_channels, hist_channels)
 
         # * Encoder
-        self.UNetEnc = UNetEncoder(in_channels, enc_hidden_list)
+        if encoder == "Original":
+            self.UNetEnc = UNetEncoder(in_channels, enc_hidden_list)
+        else:
+            self.UNetEnc = None
 
         # * Decoder
         self.UNetDec = UNetDecoder(enc_hidden_list, dec_hidden_list, hist_channels)
@@ -341,6 +353,7 @@ def get_CTN(
     in_channels: int,
     out_channels: int,
     hist_channels: int,
+    encoder_name: str,
     enc_hidden_list: List[int] = [64, 128, 256, 512, 512],
     dec_hidden_list: List[int] = [512, 256, 128, 64, 64],
     use_dropout=False,
@@ -377,7 +390,10 @@ def get_CTN(
         enc_hidden_list,
         dec_hidden_list,
         use_dropout,
+        encoder_name,
     )
     init_weights(model, type=init_method)
+    if encoder_name != "Original":
+        model.UNetEnc = create_model(encoder_name, pretrained=True, features_only=True)
 
     return model
