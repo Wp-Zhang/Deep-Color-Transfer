@@ -14,18 +14,19 @@ from src.data import Adobe5kDataModule
 
 if __name__ == "__main__":
     # * Load config and dataset info
-    parser = argparse.ArgumentParser(
-        description="Train DCT model on specified dataset."
-    )
+    parser = argparse.ArgumentParser(description="Inference DCT model on demo dataset.")
     parser.add_argument(
         "--config",
         default="configs/DeepColorTransfer.yaml",
         help="path to the configuration file",
     )
     parser.add_argument(
-        "--name",
-        default=None,
-        help="W&B runner name",
+        "--weights",
+        help="Chekpoint path",
+    )
+    parser.add_argument(
+        "--id",
+        help="W&B runner id",
     )
     args = parser.parse_args()
 
@@ -41,7 +42,7 @@ if __name__ == "__main__":
         l_bin=dataset_args.l_bin,
         ab_bin=dataset_args.ab_bin,
         num_classes=dataset_args.num_classes,
-        batch_size=dataset_args.batch_size,
+        batch_size=1,
         num_workers=dataset_args.num_workers,
     )
     model = Model(
@@ -52,30 +53,23 @@ if __name__ == "__main__":
         **optimizer_args
     )
 
-    wandb_logger = WandbLogger(project="Deep Color Transform", name=args.name)
+    wandb_logger = WandbLogger(project="Deep Color Transform", id=args.id)
     try:
         wandb_logger.experiment.config.update(cfg.to_dict())
     except:
         pass
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath=trainer_args.ckpt_dir,
-        filename="DCT-{epoch:02d}-{val_loss:.4f}",
-        monitor="val_loss",
-        mode="min",
-        save_last=True,
+        dirpath=trainer_args.ckpt_dir, filename="DCT-{epoch:02d}-{val_loss:.4f}"
     )
     trainer = Trainer(
         accelerator=trainer_args.accelerator,
-        devices=trainer_args.devices,
+        devices=1,
         max_epochs=trainer_args.max_epochs,
-        sync_batchnorm=True,
-        strategy="ddp_find_unused_parameters_false",
         num_nodes=1,
         precision=trainer_args.precision,
         callbacks=[checkpoint_callback],
         logger=wandb_logger,
     )
 
-    # Pass the datamodule as arg to trainer.fit to override model hooks :)
-    trainer.fit(model, dm)
+    trainer.validate(model, dm, ckpt_path=args.weights)
