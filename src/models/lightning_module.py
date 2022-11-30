@@ -110,24 +110,25 @@ class Model(pl.LightningModule):
             full_demo_out = [None for _ in self.trainer.device_ids]
             dist.all_gather_object(full_demo_out, demo_out)
         else:
-            full_demo_out = outputs[1]
+            full_demo_out = [outputs[1]]
 
         if self.global_rank == 0:
             # * Visualization demo
             cnt = 0
             for device_out in full_demo_out:
-                in_img, ref_img, decoder_out = device_out
-                for i in range(len(in_img)):
-                    in_img_demo = self._post_process_img(in_img[i])
-                    ref_img_demo = self._post_process_img(ref_img[i])
-                    out_demo = self._post_process_img(decoder_out[i])
+                for batch in device_out:
+                    in_img, ref_img, decoder_out = batch
+                    for i in range(len(in_img)):
+                        in_img_demo = self._post_process_img(in_img[i])
+                        ref_img_demo = self._post_process_img(ref_img[i])
+                        out_demo = self._post_process_img(decoder_out[i])
 
-                    self.logger.log_image(
-                        key=f"Pair {cnt}",
-                        images=[in_img_demo, ref_img_demo, out_demo],
-                        caption=["Input", "Reference", "Output"],
-                    )
-                    cnt += 1
+                        self.logger.log_image(
+                            key=f"Pair {cnt}",
+                            images=[in_img_demo, ref_img_demo, out_demo],
+                            caption=["Input", "Reference", "Output"],
+                        )
+                        cnt += 1
 
     def predict_step(self, batch, batch_idx):
         out = self.model(batch)[-1]
