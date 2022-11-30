@@ -2,10 +2,8 @@ numpy==1.23.3
 opencv_python==4.6.0.66
 pandas==1.4.4
 Pillow==9.3.0
-pytest==7.2.0
 python_box==6.1.0
 pytorch_lightning==1.7.7
 scikit_image==0.19.3
-skimage==0.0
 torch==1.13.0
 torchvision==0.14.0
