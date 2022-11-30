@@ -60,10 +60,11 @@ if __name__ == "__main__":
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=trainer_args.ckpt_dir,
-        filename="DCT-{epoch:02d}-{val_loss:.4f}",
-        monitor="val_loss",
+        filename="DCT-epoch={epoch:02d}-val_loss={val_loss/dataloader_idx_0:.4f}",
+        monitor="val_loss/dataloader_idx_0",
         mode="min",
         save_last=True,
+        auto_insert_metric_name=False,
     )
     trainer = Trainer(
         accelerator=trainer_args.accelerator,
