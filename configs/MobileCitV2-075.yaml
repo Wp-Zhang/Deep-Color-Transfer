@@ -2,9 +2,9 @@ model_args:
   use_seg: true
   hist_channels: 32
   init_method: Normal
-  encoder_name: mobilenetv3_large_100
-  CTN_enc_hidden_list: [16, 24, 40, 112, 960]
-  CTN_dec_hidden_list: [960, 112, 40, 24, 16]
+  encoder_name: mobilevitv2_075
+  CTN_enc_hidden_list: [48, 96, 192, 288, 384]
+  CTN_dec_hidden_list: [384, 288, 192, 96, 28]
   HEN_hidden: 128
 
 optimizer_args:
