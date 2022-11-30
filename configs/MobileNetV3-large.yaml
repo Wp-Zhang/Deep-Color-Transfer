@@ -1,6 +1,6 @@
 model_args:
   use_seg: true
-  hist_channels: 32
+  hist_channels: 16
   init_method: Normal
   encoder_name: mobilenetv3_large_100
   CTN_enc_hidden_list: [16, 24, 40, 112, 960]
@@ -16,7 +16,7 @@ optimizer_args:
 
 trainer_args:
   accelerator: gpu
-  devices: 1
+  devices: 8
   max_epochs: 100
   precision: 16 # 32 or 16
   ckpt_dir: output/lightning_ckpt
