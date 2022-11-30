@@ -12,17 +12,9 @@ from .preprocessing import (
     get_histogram,
     get_common_seg_map,
     get_segwise_hist,
-    one_hot,
     resize_and_central_crop,
 )
-
-
-def RGB2LAB(I):
-    lab = color.rgb2lab(I)
-    l = lab[:, :, 0] / 100.0
-    a = (lab[:, :, 1] + 86.1830297444) / (98.2330538631 + 86.1830297444)
-    b = (lab[:, :, 2] + 107.857300207) / (94.4781222765 + 107.857300207)
-    return np.dstack([l, a, b])
+from .transforms import get_transform_lab, get_transform_hueshiftlab
 
 
 class Adobe5kDataset(Dataset):
@@ -44,13 +36,8 @@ class Adobe5kDataset(Dataset):
         self.seg_dir = self.data_dir / "segs"
         self.img_dir = self.data_dir / "adobe_5k"
 
-        self.img_transform = T.Compose(
-            [
-                T.Lambda(lambda img: RGB2LAB(np.array(img))),
-                T.ToTensor(),
-                T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-            ]
-        )
+        self.lab_transform = get_transform_lab()
+        self.huelab_transform = get_transform_hueshiftlab()
 
         self.l_bin = l_bin
         self.ab_bin = ab_bin
@@ -62,27 +49,35 @@ class Adobe5kDataset(Dataset):
     def __getitem__(self, index):
         in_name = self.info["in_img"].iloc[index]
         ref_name = self.info["ref_img"].iloc[index]
-        seg_name = self.info["seg"].iloc[index]
+        in_seg_name = self.info["in_seg"].iloc[index]
+        ref_seg_name = self.info["ref_seg"].iloc[index]
+        trans = self.info["trans"].iloc[index]
 
         in_img = Image.open(str(self.img_dir / in_name)).convert("RGB")
         ref_img = Image.open(str(self.img_dir / ref_name)).convert("RGB")
         in_img = resize_and_central_crop(in_img, self.img_dim)
         ref_img = resize_and_central_crop(ref_img, self.img_dim)
 
-        in_img = self.img_transform(in_img)
-        ref_img = self.img_transform(ref_img)
+        if trans == "Original":
+            in_img = self.lab_transform(in_img)
+            ref_img = self.lab_transform(ref_img)
+        elif trans == "HueShift":
+            ref_img = self.huelab_transform(in_img)
+            in_img = self.lab_transform(in_img)
 
-        seg = np.load(str(self.seg_dir / seg_name))
-        seg = cv2.resize(seg, self.img_dim, interpolation=cv2.INTER_NEAREST)
+        in_seg = np.load(str(self.seg_dir / in_seg_name))
+        in_seg = cv2.resize(in_seg, self.img_dim, interpolation=cv2.INTER_NEAREST)
+        ref_seg = np.load(str(self.seg_dir / ref_seg_name))
+        ref_seg = cv2.resize(ref_seg, self.img_dim, interpolation=cv2.INTER_NEAREST)
         in_hist = get_histogram(in_img.numpy(), self.l_bin, self.ab_bin)
         ref_hist = get_histogram(ref_img.numpy(), self.l_bin, self.ab_bin)
 
-        in_common_seg = one_hot(seg, self.num_classes)
+        in_common_seg = get_common_seg_map(in_seg, ref_seg, self.num_classes)
         ref_seg_hist = get_segwise_hist(
             ref_img.numpy(),
             self.l_bin,
             self.ab_bin,
-            seg,
+            ref_seg,
             self.num_classes,
         )
 
@@ -123,13 +118,7 @@ class TestDataset(Dataset):
             self.in_seg_paths = sorted(list(self.in_seg_dir.glob("**/*.npy")))
             self.ref_seg_paths = sorted(list(self.ref_seg_dir.glob("**/*.npy")))
 
-        self.img_transform = T.Compose(
-            [
-                T.Lambda(lambda img: RGB2LAB(np.array(img))),
-                T.ToTensor(),
-                T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-            ]
-        )
+        self.lab_transform = get_transform_lab()
 
         self.l_bin = l_bin
         self.ab_bin = ab_bin
@@ -145,8 +134,8 @@ class TestDataset(Dataset):
         in_img = resize_and_central_crop(in_img, self.img_dim)
         ref_img = resize_and_central_crop(ref_img, self.img_dim)
 
-        in_img = self.img_transform(in_img).float()
-        ref_img = self.img_transform(ref_img).float()
+        in_img = self.lab_transform(in_img).float()
+        ref_img = self.lab_transform(ref_img).float()
 
         in_hist = get_histogram(in_img.numpy(), self.l_bin, self.ab_bin)
         ref_hist = get_histogram(ref_img.numpy(), self.l_bin, self.ab_bin)

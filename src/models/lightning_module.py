@@ -1,24 +1,10 @@
-from skimage import color
-import numpy as np
-
 import torch
-import torch.nn.functional as F
 import pytorch_lightning as pl
 import torch.distributed as dist
-import torchvision.transforms as T
 from .DeepColorTransform import DeepColorTransfer
-from .LearnableHistogram import get_histogram2d
+from ..data.transforms import LAB2RGB
 
 from typing import List
-
-
-def LAB2RGB(I):
-    l = I[:, :, 0] / 255.0 * 100.0
-    a = I[:, :, 1] / 255.0 * (98.2330538631 + 86.1830297444) - 86.1830297444
-    b = I[:, :, 2] / 255.0 * (94.4781222765 + 107.857300207) - 107.857300207
-
-    rgb = color.lab2rgb(np.dstack([l, a, b]).astype(np.float64))
-    return rgb
 
 
 class Model(pl.LightningModule):
