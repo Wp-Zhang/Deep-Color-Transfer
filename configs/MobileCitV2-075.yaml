@@ -2,10 +2,10 @@ model_args:
   use_seg: true
   hist_channels: 32
   init_method: Normal
-  encoder_name: Original
-  CTN_enc_hidden_list: [32, 64, 128, 256, 256]
-  CTN_dec_hidden_list: [256, 128, 64, 32, 32]
-  HEN_hidden: 32
+  encoder_name: mobilevitv2_075
+  CTN_enc_hidden_list: [48, 96, 192, 288, 384]
+  CTN_dec_hidden_list: [384, 288, 192, 96, 28]
+  HEN_hidden: 128
 
 optimizer_args:
   loss_lambda1: 1.5
@@ -17,14 +17,14 @@ optimizer_args:
 trainer_args:
   accelerator: gpu
   devices: 1
-  max_epochs: 200
+  max_epochs: 100
   precision: 16 # 32 or 16
   ckpt_dir: output/lightning_ckpt
 
 dataset_args:
   raw_dir: data/raw
 
-  img_dim: [128, 128]
+  img_dim: [224, 224]
   l_bin: 8
   ab_bin: 64
   num_classes: 150

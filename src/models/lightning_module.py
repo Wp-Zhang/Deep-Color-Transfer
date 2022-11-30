@@ -1,23 +1,10 @@
-from skimage import color
-import numpy as np
-
 import torch
-import torch.nn.functional as F
 import pytorch_lightning as pl
-import torchvision.transforms as T
+import torch.distributed as dist
 from .DeepColorTransform import DeepColorTransfer
-from .LearnableHistogram import get_histogram2d
+from ..data.transforms import LAB2RGB
 
 from typing import List
-
-
-def LAB2RGB(I):
-    l = I[:, :, 0] / 255.0 * 100.0
-    a = I[:, :, 1] / 255.0 * (98.2330538631 + 86.1830297444) - 86.1830297444
-    b = I[:, :, 2] / 255.0 * (94.4781222765 + 107.857300207) - 107.857300207
-
-    rgb = color.lab2rgb(np.dstack([l, a, b]).astype(np.float64))
-    return rgb
 
 
 class Model(pl.LightningModule):
@@ -30,6 +17,7 @@ class Model(pl.LightningModule):
         use_seg: bool,
         hist_channels: int,
         init_method: str,
+        encoder_name: str,
         CTN_enc_hidden_list: List[int],
         CTN_dec_hidden_list: List[int],
         HEN_hidden: int,
@@ -58,6 +46,7 @@ class Model(pl.LightningModule):
             use_seg,
             hist_channels,
             init_method,
+            encoder_name,
             CTN_enc_hidden_list,
             CTN_dec_hidden_list,
             HEN_hidden,
@@ -110,19 +99,35 @@ class Model(pl.LightningModule):
             )
             self.log("val_loss", loss, prog_bar=True, sync_dist=True)
             return loss
-
         else:
-            # * Visualization demo
-            for i in range(len(in_img)):
-                in_img_demo = self._post_process_img(in_img[i])
-                ref_img_demo = self._post_process_img(ref_img[i])
-                out_demo = self._post_process_img(decoder_out[-1][i])
+            return in_img, ref_img, decoder_out[-1]
 
-                self.logger.log_image(
-                    key=f"Pair {i}",
-                    images=[in_img_demo, ref_img_demo, out_demo],
-                    caption=["Input", "Reference", "Output"],
-                )
+    def validation_epoch_end(self, outputs):
+
+        if self.trainer.num_devices > 1:
+            dist.barrier()
+            demo_out = outputs[1]
+            full_demo_out = [None for _ in self.trainer.device_ids]
+            dist.all_gather_object(full_demo_out, demo_out)
+        else:
+            full_demo_out = outputs[1]
+
+        if self.global_rank == 0:
+            # * Visualization demo
+            cnt = 0
+            for device_out in full_demo_out:
+                in_img, ref_img, decoder_out = device_out
+                for i in range(len(in_img)):
+                    in_img_demo = self._post_process_img(in_img[i])
+                    ref_img_demo = self._post_process_img(ref_img[i])
+                    out_demo = self._post_process_img(decoder_out[i])
+
+                    self.logger.log_image(
+                        key=f"Pair {cnt}",
+                        images=[in_img_demo, ref_img_demo, out_demo],
+                        caption=["Input", "Reference", "Output"],
+                    )
+                    cnt += 1
 
     def predict_step(self, batch, batch_idx):
         out = self.model(batch)[-1]

@@ -2,6 +2,7 @@ model_args:
   use_seg: true
   hist_channels: 64
   init_method: Normal
+  encoder_name: Original
   CTN_enc_hidden_list: [64, 128, 256, 512, 512]
   CTN_dec_hidden_list: [512, 256, 128, 64, 64]
   HEN_hidden: 128

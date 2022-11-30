@@ -215,55 +215,74 @@ def get_dataset_info(raw_dir: str):
 
     info = None
 
-    # * 5000*5 pairs
+    # * 5000*5 pairs from original dataset
     raw_names = (raw_dir / "adobe_5k" / "raw").glob("*.jpg")
     raw_names = sorted([x.name for x in raw_names])
+    seg_names = [x[:-3] + "npy" for x in raw_names]
     for expert in ["a", "b", "c", "d", "e"]:
         ref_names = (raw_dir / "adobe_5k" / expert).glob("*.jpg")
         ref_names = sorted([x.name for x in ref_names])
-        seg_names = [x[:-3] + "npy" for x in raw_names]
-        tmp = pd.DataFrame(columns=["in_img", "ref_img", "seg"])
-        tmp["seg"] = seg_names
+        tmp = pd.DataFrame()
+        tmp["in_seg"] = seg_names
         tmp["in_img"] = raw_names
         tmp["in_img"] = "raw/" + tmp["in_img"]
         tmp["ref_img"] = ref_names
         tmp["ref_img"] = f"{expert}/" + tmp["ref_img"]
-
+        tmp["trans"] = "Original"
         info = pd.concat([info, tmp], ignore_index=True)
 
-    # * identical pairs
-    for expert in ["a", "b", "c", "d", "e"]:
+    # * Color augmentation
+    for expert in ["a", "b", "c", "d", "e", "raw"]:
         ref_names = (raw_dir / "adobe_5k" / expert).glob("*.jpg")
         ref_names = sorted([x.name for x in ref_names])
-        seg_names = [x[:-3] + "npy" for x in raw_names]
-        tmp = pd.DataFrame(columns=["in_img", "ref_img", "seg"])
-        tmp["seg"] = seg_names
+        tmp = pd.DataFrame()
+        tmp["in_seg"] = seg_names
         tmp["in_img"] = ref_names
         tmp["ref_img"] = ref_names
         tmp["in_img"] = f"{expert}/" + tmp["in_img"]
         tmp["ref_img"] = f"{expert}/" + tmp["ref_img"]
+        tmp["trans"] = "HueShift"
+    info = pd.concat([info, tmp], ignore_index=True)
+
+    # * Identical pairs
+    for expert in ["a", "b", "c", "d", "e", "raw"]:
+        ref_names = (raw_dir / "adobe_5k" / expert).glob("*.jpg")
+        ref_names = sorted([x.name for x in ref_names])
+        tmp = pd.DataFrame()
+        tmp["in_seg"] = seg_names
+        tmp["in_img"] = ref_names
+        tmp["ref_img"] = ref_names
+        tmp["in_img"] = f"{expert}/" + tmp["in_img"]
+        tmp["ref_img"] = f"{expert}/" + tmp["ref_img"]
+        tmp["trans"] = "Original"
         info = pd.concat([info, tmp], ignore_index=True)
 
+    info["ref_seg"] = info["in_seg"]
     info["type"] = "train"
 
     # * Generate test demo for visualization during training process
-    in_imgs = ["raw/a0029-jmac_DSC3974.jpg" for _ in range(3)]
+    in_imgs = ["raw/a0029-jmac_DSC3974.jpg" for _ in range(4)]
     ref_imgs = [
         "c/a0029-jmac_DSC3974.jpg",
         "c/a0030-_MG_7844.jpg",
         "raw/a4966-Duggan_090124_4744.jpg",
+        "raw/a4966-Duggan_090124_4744.jpg",
     ]
-    segs = [
+    in_segs = ["a0029-jmac_DSC3974.npy" for _ in range(4)]
+    ref_segs = [
         "a0029-jmac_DSC3974.npy",
         "a0030-_MG_7844.npy",
         "a4966-Duggan_090124_4744.npy",
+        "a4966-Duggan_090124_4744.npy",
     ]
-    test_info = pd.DataFrame(columns=["in_img", "ref_img", "seg"])
-    test_info["seg"] = segs
+    test_info = pd.DataFrame()
+    test_info["in_seg"] = in_segs
+    test_info["ref_seg"] = ref_segs
     test_info["in_img"] = in_imgs
     test_info["ref_img"] = ref_imgs
+    test_info["trans"] = ["Original" for _ in range(3)] + ["HueShift"]
     test_info["type"] = "test"
 
     info = pd.concat([info, test_info], ignore_index=True)
-
+    info = info[["in_img", "ref_img", "in_seg", "ref_seg", "trans", "type"]]
     info.to_csv(raw_dir / "dataset_info.csv", index=None)
