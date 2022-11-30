@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import pytorch_lightning as pl
+import torch.distributed as dist
 import torchvision.transforms as T
 from .DeepColorTransform import DeepColorTransfer
 from .LearnableHistogram import get_histogram2d
@@ -110,19 +111,35 @@ class Model(pl.LightningModule):
             )
             self.log("val_loss", loss, prog_bar=True, sync_dist=True)
             return loss
-
         else:
-            # * Visualization demo
-            for i in range(len(in_img)):
-                in_img_demo = self._post_process_img(in_img[i])
-                ref_img_demo = self._post_process_img(ref_img[i])
-                out_demo = self._post_process_img(decoder_out[-1][i])
+            return in_img, ref_img, decoder_out[-1]
 
-                self.logger.log_image(
-                    key=f"Pair {i}",
-                    images=[in_img_demo, ref_img_demo, out_demo],
-                    caption=["Input", "Reference", "Output"],
-                )
+    def validation_epoch_end(self, outputs):
+
+        if self.trainer.num_devices > 1:
+            dist.barrier()
+            demo_out = outputs[1]
+            full_demo_out = [None for _ in self.trainer.device_ids]
+            dist.all_gather_object(full_demo_out, demo_out)
+        else:
+            full_demo_out = outputs[1]
+
+        if self.global_rank == 0:
+            # * Visualization demo
+            cnt = 0
+            for device_out in full_demo_out:
+                in_img, ref_img, decoder_out = device_out
+                for i in range(len(in_img)):
+                    in_img_demo = self._post_process_img(in_img[i])
+                    ref_img_demo = self._post_process_img(ref_img[i])
+                    out_demo = self._post_process_img(decoder_out[i])
+
+                    self.logger.log_image(
+                        key=f"Pair {cnt}",
+                        images=[in_img_demo, ref_img_demo, out_demo],
+                        caption=["Input", "Reference", "Output"],
+                    )
+                    cnt += 1
 
     def predict_step(self, batch, batch_idx):
         out = self.model(batch)[-1]
