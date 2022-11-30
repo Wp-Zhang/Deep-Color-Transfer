@@ -49,7 +49,7 @@ if __name__ == "__main__":
         ab_bin=dataset_args.ab_bin,
         num_classes=dataset_args.num_classes,
         **model_args,
-        **optimizer_args
+        **optimizer_args,
     )
 
     wandb_logger = WandbLogger(project="Deep Color Transform", name=args.name)
@@ -60,7 +60,8 @@ if __name__ == "__main__":
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=trainer_args.ckpt_dir,
-        filename="DCT-epoch={epoch:02d}-val_loss={val_loss/dataloader_idx_0:.4f}",
+        filename=f"DCT-name={wandb_logger.experiment.name}-"
+        + "epoch={epoch:02d}-val_loss={val_loss/dataloader_idx_0:.4f}",
         monitor="val_loss/dataloader_idx_0",
         mode="min",
         save_last=True,
