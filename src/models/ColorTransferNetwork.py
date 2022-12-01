@@ -124,14 +124,24 @@ class UNetDecoder(nn.Module):
         last_dec_hidden = enc_hidden_list[-1]
         for i, enc_hidden in enumerate(enc_hidden_list[::-1]):
             dec_hidden = dec_hidden_list[i]
-            block = UNetDecoderBlock(
-                [
-                    enc_hidden + last_dec_hidden + hist_nc * 2,
-                    dec_hidden,
-                    dec_hidden,
-                    dec_hidden,
-                ]
-            )  # TODO a little different with the original version
+            if i != len(enc_hidden_list) - 1:
+                block = UNetDecoderBlock(
+                    [
+                        enc_hidden + last_dec_hidden + hist_nc * 2,
+                        dec_hidden,
+                        dec_hidden,
+                        dec_hidden,
+                    ]
+                )
+            else:
+                block = UNetDecoderBlock(
+                    [
+                        enc_hidden + last_dec_hidden + hist_nc * 2,
+                        128,
+                        dec_hidden,
+                        dec_hidden,
+                    ]
+                )  # * keep the same the the author
             self.dec.append(block)
             last_dec_hidden = dec_hidden
         self.dec = nn.ModuleList(self.dec)
