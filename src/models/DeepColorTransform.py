@@ -59,7 +59,7 @@ class DeepColorTransfer(nn.Module):
             dec_hidden_list=CTN_dec_hidden_list,
             init_method=init_method,
         )
-        self.histogram = LearnableHistogram(32)
+        self.histogram = LearnableHistogram(3, 5, 8)
 
     def forward(
         self,
@@ -190,7 +190,4 @@ class DeepColorTransfer(nn.Module):
             multi_loss += F.mse_loss(upsample, label)
         multi_loss /= len(decoder_out) - 1
 
-        # * total
-        final_loss = img_loss + lambda1 * hist_loss + lambda2 * multi_loss
-
-        return final_loss
+        return img_loss, lambda1 * hist_loss, lambda2 * multi_loss

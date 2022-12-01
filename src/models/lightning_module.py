@@ -81,8 +81,11 @@ class Model(pl.LightningModule):
             ref_img, decoder_out, self.loss_lambda1, self.loss_lambda2
         )
 
-        self.log("train_loss", loss)
-        return loss
+        self.log("train_loss", sum(loss))
+        self.log("train_img_loss", loss[0])
+        self.log("train_hist_loss", loss[1])
+        self.log("train_multi_loss", loss[2])
+        return sum(loss)
 
     def validation_step(self, batch, batch_idx, dataloader_idx):
         in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist = batch
@@ -97,8 +100,11 @@ class Model(pl.LightningModule):
             loss = self.model.calc_loss(
                 ref_img, decoder_out, self.loss_lambda1, self.loss_lambda2
             )
-            self.log("val_loss", loss, prog_bar=True, sync_dist=True)
-            return loss
+            self.log("val_loss", sum(loss), prog_bar=True, sync_dist=True)
+            self.log("val_img_loss", loss[0])
+            self.log("val_hist_loss", loss[1])
+            self.log("val_multi_loss", loss[2])
+            return sum(loss)
         else:
             return in_img, ref_img, decoder_out[-1]
 

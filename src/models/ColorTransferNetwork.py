@@ -71,7 +71,7 @@ class UNetEncoder(nn.Module):
 class UNetDecoderBlock(nn.Module):
     """UNet Decoder Block"""
 
-    def __init__(self, channel_list: List):
+    def __init__(self, channel_list: List, is_last=False):
         """Initialize a U-Net decoder block
 
         Parameters
@@ -83,10 +83,16 @@ class UNetDecoderBlock(nn.Module):
 
         assert len(channel_list) == 4, "Incorrect length of channel_list"
 
-        self.block = nn.Sequential(
+        layers = [
             nn.ReLU(True),
             nn.Upsample(scale_factor=2, mode="bilinear"),
-            nn.Conv2d(channel_list[0], channel_list[1], kernel_size=3, padding=1),
+            nn.Conv2d(
+                channel_list[0],
+                channel_list[1],
+                kernel_size=3,
+                padding=1,
+                bias=not is_last,
+            ),
             nn.InstanceNorm2d(channel_list[1]),
             # ------------------------------------------------
             nn.ReLU(True),
@@ -95,8 +101,11 @@ class UNetDecoderBlock(nn.Module):
             # ------------------------------------------------
             nn.ReLU(True),
             nn.Conv2d(channel_list[2], channel_list[3], kernel_size=3, padding=1),
-            nn.InstanceNorm2d(channel_list[3]),
-        )
+        ]
+        if not is_last:
+            layers.append(nn.InstanceNorm2d(channel_list[3]))
+
+        self.block = nn.Sequential(*layers)
 
     def forward(
         self,
@@ -124,14 +133,25 @@ class UNetDecoder(nn.Module):
         last_dec_hidden = enc_hidden_list[-1]
         for i, enc_hidden in enumerate(enc_hidden_list[::-1]):
             dec_hidden = dec_hidden_list[i]
-            block = UNetDecoderBlock(
-                [
-                    enc_hidden + last_dec_hidden + hist_nc * 2,
-                    dec_hidden,
-                    dec_hidden,
-                    dec_hidden,
-                ]
-            )  # TODO a little different with the original version
+            if i != len(enc_hidden_list) - 1:
+                block = UNetDecoderBlock(
+                    [
+                        enc_hidden + last_dec_hidden + hist_nc * 2,
+                        dec_hidden,
+                        dec_hidden,
+                        dec_hidden,
+                    ]
+                )
+            else:
+                block = UNetDecoderBlock(
+                    [
+                        enc_hidden + last_dec_hidden + hist_nc * 2,
+                        128,
+                        dec_hidden,
+                        dec_hidden,
+                    ],
+                    True,
+                )  # * keep the same the the author
             self.dec.append(block)
             last_dec_hidden = dec_hidden
         self.dec = nn.ModuleList(self.dec)
