@@ -59,7 +59,7 @@ class DeepColorTransfer(nn.Module):
             dec_hidden_list=CTN_dec_hidden_list,
             init_method=init_method,
         )
-        self.histogram = LearnableHistogram(32)
+        self.histogram = LearnableHistogram(3, 5, 8)
 
     def forward(
         self,
