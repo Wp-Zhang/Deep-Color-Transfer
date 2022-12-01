@@ -266,14 +266,14 @@ def get_dataset_info(raw_dir: str):
         "c/a0029-jmac_DSC3974.jpg",
         "c/a0030-_MG_7844.jpg",
         "raw/a4966-Duggan_090124_4744.jpg",
-        "raw/a4966-Duggan_090124_4744.jpg",
+        "raw/a0029-jmac_DSC3974.jpg",
     ]
     in_segs = ["a0029-jmac_DSC3974.npy" for _ in range(4)]
     ref_segs = [
         "a0029-jmac_DSC3974.npy",
         "a0030-_MG_7844.npy",
         "a4966-Duggan_090124_4744.npy",
-        "a4966-Duggan_090124_4744.npy",
+        "a0029-jmac_DSC3974.npy",
     ]
     test_info = pd.DataFrame()
     test_info["in_seg"] = in_segs

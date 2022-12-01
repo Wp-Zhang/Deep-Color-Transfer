@@ -1,4 +1,3 @@
-import time
 import torchvision.transforms as T
 import numpy as np
 from skimage import color

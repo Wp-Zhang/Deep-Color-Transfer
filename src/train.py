@@ -79,5 +79,4 @@ if __name__ == "__main__":
         logger=wandb_logger,
     )
 
-    # Pass the datamodule as arg to trainer.fit to override model hooks :)
     trainer.fit(model, dm)
