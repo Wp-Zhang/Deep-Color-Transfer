@@ -82,6 +82,8 @@ class LearnableHistogram(nn.Module):
 
         self.LHConv_1.bias.data = -torch.arange(0, 1, 1 / (self.bin_num))
         self.LHConv_1.weight.data = torch.ones(self.bin_num, 1, 1, 1)
+        self.LHConv_1.bias.requires_grad = False
+        self.LHConv_1.weight.requires_grad = False
 
     def forward(self, input):
         a1 = self.LHConv_1(input)
