@@ -8,7 +8,7 @@ model_args:
   HEN_hidden: 128
 
 optimizer_args:
-  loss_lambda1: 1.5
+  loss_lambda1: 1000
   loss_lambda2: 0.5
   learning_rate: 0.00005
   beta1: 0.5
