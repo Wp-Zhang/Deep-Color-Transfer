@@ -131,7 +131,7 @@ class Model(pl.LightningModule):
                         cnt += 1
 
     def predict_step(self, batch, batch_idx):
-        out = self.model(batch)[-1]
+        out = self.model(*batch)[-1]
 
         res = []
         for img in out:
