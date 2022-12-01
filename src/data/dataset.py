@@ -1,6 +1,8 @@
 import torch
 from torch.utils.data import Dataset
 import torchvision.transforms as T
+import torchvision.transforms.functional as TF
+import random
 import pandas as pd
 import cv2
 from PIL import Image
@@ -46,6 +48,35 @@ class Adobe5kDataset(Dataset):
     def __len__(self):
         return self.info.shape[0]
 
+    def augmentation(self, in_img, in_seg, ref_img, ref_seg):
+        # Resize
+        resize = T.Resize((350, 350))
+        in_img = resize(in_img)
+        in_seg = resize(in_seg)
+        ref_img = resize(ref_img)
+        ref_seg = resize(ref_seg)
+
+        # Random crop
+        i, j, h, w = T.RandomCrop.get_params(in_img, output_size=self.img_dim)
+        in_img = TF.crop(in_img, i, j, h, w)
+        in_seg = TF.crop(in_seg, i, j, h, w)
+        ref_img = TF.crop(ref_img, i, j, h, w)
+        ref_seg = TF.crop(ref_seg, i, j, h, w)
+
+        # Random horizontal flipping
+        if random.random() > 0.5:
+            in_img = TF.hflip(in_img)
+            in_seg = TF.hflip(in_seg)
+            ref_img = TF.hflip(ref_img)
+            ref_seg = TF.hflip(ref_seg)
+
+        return (
+            in_img,
+            np.array(in_seg).astype("uint8"),
+            ref_img,
+            np.array(ref_seg).astype("uint8"),
+        )
+
     def __getitem__(self, index):
         in_name = self.info["in_img"].iloc[index]
         ref_name = self.info["ref_img"].iloc[index]
@@ -55,8 +86,17 @@ class Adobe5kDataset(Dataset):
 
         in_img = Image.open(str(self.img_dir / in_name)).convert("RGB")
         ref_img = Image.open(str(self.img_dir / ref_name)).convert("RGB")
-        in_img = resize_and_central_crop(in_img, self.img_dim)
-        ref_img = resize_and_central_crop(ref_img, self.img_dim)
+        in_img = resize_and_central_crop(in_img, (512, 512))
+        ref_img = resize_and_central_crop(ref_img, (512, 512))
+
+        in_seg = np.load(str(self.seg_dir / in_seg_name))
+        in_seg = cv2.resize(in_seg, self.img_dim, interpolation=cv2.INTER_NEAREST)
+        ref_seg = np.load(str(self.seg_dir / ref_seg_name))
+        ref_seg = cv2.resize(ref_seg, self.img_dim, interpolation=cv2.INTER_NEAREST)
+
+        in_img, in_seg, ref_img, ref_seg = self.augmentation(
+            in_img, Image.fromarray(in_seg), ref_img, Image.fromarray(ref_seg)
+        )
 
         if trans == "Original":
             in_img = self.lab_transform(in_img)
@@ -65,10 +105,6 @@ class Adobe5kDataset(Dataset):
             ref_img = self.huelab_transform(in_img)
             in_img = self.lab_transform(in_img)
 
-        in_seg = np.load(str(self.seg_dir / in_seg_name))
-        in_seg = cv2.resize(in_seg, self.img_dim, interpolation=cv2.INTER_NEAREST)
-        ref_seg = np.load(str(self.seg_dir / ref_seg_name))
-        ref_seg = cv2.resize(ref_seg, self.img_dim, interpolation=cv2.INTER_NEAREST)
         in_hist = get_histogram(in_img.numpy(), self.l_bin, self.ab_bin)
         ref_hist = get_histogram(ref_img.numpy(), self.l_bin, self.ab_bin)
 
@@ -99,7 +135,7 @@ class TestDataset(Dataset):
         ab_bin: int,
         num_classes: int,
         use_seg: bool,
-        img_dim=(256, 256),
+        img_dim=256,
     ):
         super(Dataset, self).__init__()
 
@@ -131,8 +167,8 @@ class TestDataset(Dataset):
         in_img = Image.open(str(self.in_img_paths[index])).convert("RGB")
         ref_img = Image.open(str(self.ref_img_paths[index])).convert("RGB")
 
-        in_img = resize_and_central_crop(in_img, self.img_dim)
-        ref_img = resize_and_central_crop(ref_img, self.img_dim)
+        # in_img = resize_and_central_crop(in_img, self.img_dim)
+        # ref_img = resize_and_central_crop(ref_img, self.img_dim)
 
         in_img = self.lab_transform(in_img).float()
         ref_img = self.lab_transform(ref_img).float()
