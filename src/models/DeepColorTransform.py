@@ -190,7 +190,4 @@ class DeepColorTransfer(nn.Module):
             multi_loss += F.mse_loss(upsample, label)
         multi_loss /= len(decoder_out) - 1
 
-        # * total
-        final_loss = img_loss + lambda1 * hist_loss + lambda2 * multi_loss
-
-        return final_loss
+        return img_loss, lambda1 * hist_loss, lambda2 * multi_loss
