@@ -22,6 +22,7 @@ class Model(pl.LightningModule):
         CTN_dec_hidden_list: List[int],
         HEN_hidden: int,
         # * Optimization parameters
+        loss_lambda0: float,
         loss_lambda1: float,
         loss_lambda2: float,
         learning_rate: float,
@@ -53,11 +54,12 @@ class Model(pl.LightningModule):
         )
 
         # * ----------------- Training parameters -----------------
+        self.loss_lambda0 = loss_lambda0
         self.loss_lambda1 = loss_lambda1
         self.loss_lambda2 = loss_lambda2
-        self.learning_rate = learning_rate  # 5e-5
-        self.beta1 = beta1  # 0.5
-        self.beta2 = beta2  # 0.999
+        self.learning_rate = learning_rate
+        self.beta1 = beta1
+        self.beta2 = beta2
 
     # * ===================== training related ====================
 
@@ -69,7 +71,15 @@ class Model(pl.LightningModule):
         return img
 
     def training_step(self, batch, batch_idx):
-        in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist = batch
+        (
+            in_img,
+            in_hist,
+            in_common_seg,
+            ref_img,
+            ref_hist,
+            ref_segwise_hist,
+            is_identical,
+        ) = batch
 
         # * forward
         decoder_out = self.model(
@@ -77,8 +87,13 @@ class Model(pl.LightningModule):
         )
 
         # * calculate loss
+        loss_weight0 = 1 - (1 - self.loss_lambda0) * is_identical.float()
         loss = self.model.calc_loss(
-            ref_img, decoder_out, self.loss_lambda1, self.loss_lambda2
+            ref_img,
+            decoder_out,
+            loss_weight0,
+            self.loss_lambda1,
+            self.loss_lambda2,
         )
 
         self.log("train_loss", sum(loss))
@@ -88,7 +103,15 @@ class Model(pl.LightningModule):
         return sum(loss)
 
     def validation_step(self, batch, batch_idx, dataloader_idx):
-        in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist = batch
+        (
+            in_img,
+            in_hist,
+            in_common_seg,
+            ref_img,
+            ref_hist,
+            ref_segwise_hist,
+            is_identical,
+        ) = batch
 
         # * forward
         decoder_out = self.model(
@@ -97,9 +120,15 @@ class Model(pl.LightningModule):
 
         if dataloader_idx == 0:
             # * Normal validation
+            loss_weight0 = 1 - (1 - self.loss_lambda0) * is_identical.float()
             loss = self.model.calc_loss(
-                ref_img, decoder_out, self.loss_lambda1, self.loss_lambda2
+                ref_img,
+                decoder_out,
+                loss_weight0,
+                self.loss_lambda1,
+                self.loss_lambda2,
             )
+
             self.log("val_loss", sum(loss), prog_bar=True, sync_dist=True)
             self.log("val_img_loss", loss[0])
             self.log("val_hist_loss", loss[1])

@@ -138,6 +138,7 @@ class Adobe5kDataset(Dataset):
             ref_img.float(),
             torch.from_numpy(ref_hist).float(),
             torch.from_numpy(ref_seg_hist).float(),
+            trans == "Identical",
         )
 
 

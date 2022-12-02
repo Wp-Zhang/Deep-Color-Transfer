@@ -170,12 +170,14 @@ class DeepColorTransfer(nn.Module):
         self,
         label_img: torch.Tensor,
         decoder_out: List[torch.Tensor],
+        lambda0: float,
         lambda1: float,
         lambda2: float,
     ) -> torch.Tensor:
         out_img = decoder_out[-1]
         # * image loss
-        img_loss = F.mse_loss(out_img, label_img)
+        img_loss = (label_img - out_img) ** 2 * lambda0[..., None, None, None]
+        img_loss = img_loss.mean()
 
         # * histogram loss
         out_hist = get_histogram2d(out_img, self.histogram)
