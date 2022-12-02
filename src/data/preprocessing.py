@@ -246,7 +246,7 @@ def get_dataset_info(raw_dir: str):
     # info = pd.concat([info, tmp], ignore_index=True)
 
     # * Identical pairs
-    for expert in ["raw"]:
+    for expert in ["a", "b", "c", "d", "e"]:
         ref_names = (raw_dir / "adobe_5k" / expert).glob("*.jpg")
         ref_names = sorted([x.name for x in ref_names])
         tmp = pd.DataFrame()
