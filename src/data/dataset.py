@@ -28,6 +28,7 @@ class Adobe5kDataset(Dataset):
         l_bin: int,
         ab_bin: int,
         num_classes: int,
+        if_aug: bool = True,
     ):
         super(Dataset, self).__init__()
 
@@ -45,30 +46,33 @@ class Adobe5kDataset(Dataset):
         self.ab_bin = ab_bin
         self.num_classes = num_classes
 
+        self.if_aug = if_aug
+
     def __len__(self):
         return self.info.shape[0]
 
-    def augmentation(self, in_img, in_seg, ref_img, ref_seg):
+    def augmentation(self, in_img, in_seg, ref_img, ref_seg, rand=True):
         # Resize
-        resize = T.Resize((350, 350))
+        resize = T.Resize((300, 300))
         in_img = resize(in_img)
         in_seg = resize(in_seg)
         ref_img = resize(ref_img)
         ref_seg = resize(ref_seg)
 
-        # Random crop
-        i, j, h, w = T.RandomCrop.get_params(in_img, output_size=self.img_dim)
-        in_img = TF.crop(in_img, i, j, h, w)
-        in_seg = TF.crop(in_seg, i, j, h, w)
-        ref_img = TF.crop(ref_img, i, j, h, w)
-        ref_seg = TF.crop(ref_seg, i, j, h, w)
+        if rand:
+            # Random crop
+            i, j, h, w = T.RandomCrop.get_params(in_img, output_size=self.img_dim)
+            in_img = TF.crop(in_img, i, j, h, w)
+            in_seg = TF.crop(in_seg, i, j, h, w)
+            ref_img = TF.crop(ref_img, i, j, h, w)
+            ref_seg = TF.crop(ref_seg, i, j, h, w)
 
-        # Random horizontal flipping
-        if random.random() > 0.5:
-            in_img = TF.hflip(in_img)
-            in_seg = TF.hflip(in_seg)
-            ref_img = TF.hflip(ref_img)
-            ref_seg = TF.hflip(ref_seg)
+            # Random horizontal flipping
+            if random.random() > 0.5:
+                in_img = TF.hflip(in_img)
+                in_seg = TF.hflip(in_seg)
+                ref_img = TF.hflip(ref_img)
+                ref_seg = TF.hflip(ref_seg)
 
         return (
             in_img,
@@ -89,21 +93,31 @@ class Adobe5kDataset(Dataset):
         in_img = resize_and_central_crop(in_img, (512, 512))
         ref_img = resize_and_central_crop(ref_img, (512, 512))
 
-        in_seg = np.load(str(self.seg_dir / in_seg_name))
-        in_seg = cv2.resize(in_seg, self.img_dim, interpolation=cv2.INTER_NEAREST)
-        ref_seg = np.load(str(self.seg_dir / ref_seg_name))
-        ref_seg = cv2.resize(ref_seg, self.img_dim, interpolation=cv2.INTER_NEAREST)
+        in_seg = Image.fromarray(np.load(str(self.seg_dir / in_seg_name)))
+        ref_seg = Image.fromarray(np.load(str(self.seg_dir / ref_seg_name)))
+        in_seg = resize_and_central_crop(in_seg, (512, 512))
+        ref_seg = resize_and_central_crop(ref_seg, (512, 512))
 
-        in_img, in_seg, ref_img, ref_seg = self.augmentation(
-            in_img, Image.fromarray(in_seg), ref_img, Image.fromarray(ref_seg)
-        )
-
-        if trans == "Original":
-            in_img = self.lab_transform(in_img)
-            ref_img = self.lab_transform(ref_img)
-        elif trans == "HueShift":
-            ref_img = self.huelab_transform(in_img)
-            in_img = self.lab_transform(in_img)
+        if self.if_aug:
+            in_img, in_seg, ref_img, ref_seg = self.augmentation(
+                in_img, in_seg, ref_img, ref_seg
+            )
+            if trans != "Identical":
+                in_img = self.huelab_transform(in_img)
+                ref_img = self.lab_transform(ref_img)
+            else:
+                in_img = self.huelab_transform(in_img)
+                ref_img = in_img.clone()
+        else:
+            in_img, in_seg, ref_img, ref_seg = self.augmentation(
+                in_img, in_seg, ref_img, ref_seg, rand=False
+            )
+            if trans == "HueShift":
+                in_img = self.lab_transform(in_img)
+                ref_img = self.huelab_transform(ref_img)
+            else:
+                in_img = self.lab_transform(in_img)
+                ref_img = self.lab_transform(ref_img)
 
         in_hist = get_histogram(in_img.numpy(), self.l_bin, self.ab_bin)
         ref_hist = get_histogram(ref_img.numpy(), self.l_bin, self.ab_bin)

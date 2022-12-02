@@ -120,17 +120,25 @@ class Model(pl.LightningModule):
 
         if self.global_rank == 0:
             # * Visualization demo
+            pair_names = {
+                0: "High Relevance",
+                1: "Weak Relevance",
+                2: "No Relevance",
+                3: "Hue Shift",
+            }
             cnt = 0
             for device_out in full_demo_out:
                 for batch in device_out:
                     in_img, ref_img, decoder_out = batch
                     for i in range(len(in_img)):
+                        if cnt > 3:
+                            return
                         in_img_demo = self._post_process_img(in_img[i])
                         ref_img_demo = self._post_process_img(ref_img[i])
                         out_demo = self._post_process_img(decoder_out[i])
 
                         self.logger.log_image(
-                            key=f"Pair {cnt}",
+                            key=pair_names[cnt],
                             images=[in_img_demo, ref_img_demo, out_demo],
                             caption=["Input", "Reference", "Output"],
                         )

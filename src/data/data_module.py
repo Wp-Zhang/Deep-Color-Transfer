@@ -74,6 +74,7 @@ class Adobe5kDataModule(LightningDataModule):
                 self.l_bin,
                 self.ab_bin,
                 self.num_classes,
+                if_aug=False,
             )
 
     def train_dataloader(self):
