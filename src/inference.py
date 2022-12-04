@@ -1,7 +1,8 @@
 from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.loggers import WandbLogger
+import torch
+from PIL import Image
 from box import Box
+from pathlib import Path
 import sys
 import warnings
 import argparse
@@ -10,7 +11,7 @@ sys.path.append("./")
 warnings.filterwarnings("ignore")
 
 from src.models import Model
-from src.data import Adobe5kDataModule
+from src.data import TestDataModule
 
 if __name__ == "__main__":
     # * Load config and dataset info
@@ -22,11 +23,16 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--weights",
-        help="Chekpoint path",
+        help="Staet dict path",
     )
     parser.add_argument(
-        "--id",
-        help="W&B runner id",
+        "--test_dir",
+        help="Test data dir",
+    )
+    parser.add_argument(
+        "--use_seg",
+        action="store_true",
+        help="Whether to use seg",
     )
     args = parser.parse_args()
 
@@ -36,40 +42,25 @@ if __name__ == "__main__":
     dataset_args = cfg.dataset_args
     trainer_args = cfg.trainer_args
 
-    dm = Adobe5kDataModule(
-        trainset_dir=dataset_args.raw_dir,
-        img_dim=dataset_args.img_dim,
+    dm = TestDataModule(
+        testset_dir=args.test_dir,
         l_bin=dataset_args.l_bin,
         ab_bin=dataset_args.ab_bin,
         num_classes=dataset_args.num_classes,
-        batch_size=1,
-        num_workers=dataset_args.num_workers,
+        use_seg=args.use_seg,
     )
     model = Model(
         l_bin=dataset_args.l_bin,
         ab_bin=dataset_args.ab_bin,
         num_classes=dataset_args.num_classes,
         **model_args,
-        **optimizer_args
+        **optimizer_args,
     )
+    model.model.load_state_dict(torch.load(args.weights))
 
-    wandb_logger = WandbLogger(project="Deep Color Transform", id=args.id)
-    try:
-        wandb_logger.experiment.config.update(cfg.to_dict())
-    except:
-        pass
+    trainer = Trainer(accelerator="auto")
 
-    checkpoint_callback = ModelCheckpoint(
-        dirpath=trainer_args.ckpt_dir, filename="DCT-{epoch:02d}-{val_loss:.4f}"
-    )
-    trainer = Trainer(
-        accelerator=trainer_args.accelerator,
-        devices=1,
-        max_epochs=trainer_args.max_epochs,
-        num_nodes=1,
-        precision=trainer_args.precision,
-        callbacks=[checkpoint_callback],
-        logger=wandb_logger,
-    )
-
-    trainer.validate(model, dm, ckpt_path=args.weights)
+    out = trainer.predict(model, dm, return_predictions=True)
+    for i, img in enumerate(out):
+        img = Image.fromarray((img * 255).astype("uint8"))
+        img.save(str(Path(args.test_dir) / f"{i}.jpg"))

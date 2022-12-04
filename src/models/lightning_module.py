@@ -2,7 +2,7 @@ import torch
 import pytorch_lightning as pl
 import torch.distributed as dist
 from .DeepColorTransform import DeepColorTransfer
-from ..data.transforms import LAB2RGB
+from ..data.transforms import post_process_img
 
 from typing import List
 
@@ -62,13 +62,6 @@ class Model(pl.LightningModule):
         self.beta2 = beta2
 
     # * ===================== training related ====================
-
-    def _post_process_img(self, img: torch.Tensor):
-        img = (img * 0.5 + 0.5) * 255
-        img = img.cpu().numpy()
-        img = LAB2RGB(img.transpose(1, 2, 0))
-
-        return img
 
     def training_step(self, batch, batch_idx):
         (
@@ -162,9 +155,9 @@ class Model(pl.LightningModule):
                     for i in range(len(in_img)):
                         if cnt > 3:
                             return
-                        in_img_demo = self._post_process_img(in_img[i])
-                        ref_img_demo = self._post_process_img(ref_img[i])
-                        out_demo = self._post_process_img(decoder_out[i])
+                        in_img_demo = post_process_img(in_img[i])
+                        ref_img_demo = post_process_img(ref_img[i])
+                        out_demo = post_process_img(decoder_out[i])
 
                         self.logger.log_image(
                             key=pair_names[cnt],
@@ -174,12 +167,14 @@ class Model(pl.LightningModule):
                         cnt += 1
 
     def predict_step(self, batch, batch_idx):
-        out = self.model(*batch)[-1]
+        out_img = self.model.inference(*batch)[0]
+        out_img = post_process_img(out_img)
+        return out_img
 
+    def on_predict_epoch_end(self, results):
         res = []
-        for img in out:
-            img = self._post_process_img(img)
-            res.append(img)
+        for batch in results:
+            res.extend(batch)
         return res
 
     def configure_optimizers(self):

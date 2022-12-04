@@ -6,7 +6,6 @@ import random
 import pandas as pd
 import cv2
 from PIL import Image
-from skimage import color
 from pathlib import Path
 import numpy as np
 from typing import Tuple
@@ -14,7 +13,6 @@ from .preprocessing import (
     get_histogram,
     get_common_seg_map,
     get_segwise_hist,
-    resize_and_central_crop,
 )
 from .transforms import get_transform_lab, get_transform_hueshiftlab
 
@@ -163,36 +161,29 @@ class Adobe5kDataset(Dataset):
 
 class TestDataset(Dataset):
     def __init__(
-        self,
-        data_dir: str,
-        l_bin: int,
-        ab_bin: int,
-        num_classes: int,
-        use_seg: bool,
-        img_dim=256,
+        self, data_dir: str, l_bin: int, ab_bin: int, num_classes: int, use_seg: bool
     ):
         super(Dataset, self).__init__()
 
         self.data_dir = Path(data_dir)
-        self.use_seg = use_seg
-        self.img_dim = img_dim
 
         self.in_img_dir = self.data_dir / "in_imgs"
         self.ref_img_dir = self.data_dir / "ref_imgs"
         self.in_img_paths = sorted(list(self.in_img_dir.glob("**/*.jpg")))
         self.ref_img_paths = sorted(list(self.ref_img_dir.glob("**/*.jpg")))
 
-        if use_seg:
-            self.in_seg_dir = self.data_dir / "in_segs"
-            self.ref_seg_dir = self.data_dir / "ref_segs"
-            self.in_seg_paths = sorted(list(self.in_seg_dir.glob("**/*.npy")))
-            self.ref_seg_paths = sorted(list(self.ref_seg_dir.glob("**/*.npy")))
+        self.in_seg_dir = self.data_dir / "in_segs"
+        self.ref_seg_dir = self.data_dir / "ref_segs"
+        self.in_seg_paths = sorted(list(self.in_seg_dir.glob("**/*.npy")))
+        self.ref_seg_paths = sorted(list(self.ref_seg_dir.glob("**/*.npy")))
 
         self.lab_transform = get_transform_lab()
 
         self.l_bin = l_bin
         self.ab_bin = ab_bin
         self.num_classes = num_classes
+
+        self.use_seg = use_seg
 
     def __len__(self):
         return len(self.in_img_paths)
@@ -201,39 +192,26 @@ class TestDataset(Dataset):
         in_img = Image.open(str(self.in_img_paths[index])).convert("RGB")
         ref_img = Image.open(str(self.ref_img_paths[index])).convert("RGB")
 
-        # in_img = resize_and_central_crop(in_img, self.img_dim)
-        # ref_img = resize_and_central_crop(ref_img, self.img_dim)
+        if self.use_seg:
+            in_seg = np.load(str(self.in_seg_paths[index]), allow_pickle=True)
+            ref_seg = np.load(str(self.ref_seg_paths[index]), allow_pickle=True)
+
+            in_img = in_img.resize(in_seg.shape[::-1])
+            ref_img = ref_img.resize(ref_seg.shape[::-1])
+
+            in_seg = torch.from_numpy(in_seg)
+            ref_seg = torch.from_numpy(ref_seg)
+        else:
+            in_seg, ref_seg = np.array([0]), np.array([0])
+            in_seg = torch.from_numpy(in_seg)
+            ref_seg = torch.from_numpy(ref_seg)
 
         in_img = self.lab_transform(in_img).float()
         ref_img = self.lab_transform(ref_img).float()
 
         in_hist = get_histogram(in_img.numpy(), self.l_bin, self.ab_bin)
         ref_hist = get_histogram(ref_img.numpy(), self.l_bin, self.ab_bin)
+        in_hist = torch.from_numpy(in_hist).float()
+        ref_hist = torch.from_numpy(ref_hist).float()
 
-        if self.use_seg:
-            in_seg = np.load(str(self.in_seg_paths[index]))
-            ref_seg = np.load(str(self.ref_seg_paths[index]))
-
-            in_seg = cv2.resize(in_seg, self.img_dim, interpolation=cv2.INTER_NEAREST)
-            ref_seg = cv2.resize(ref_seg, self.img_dim, interpolation=cv2.INTER_NEAREST)
-
-            in_common_seg = get_common_seg_map(in_seg, ref_seg, self.num_classes)
-            ref_seg_hist = get_segwise_hist(
-                ref_img.numpy(),
-                self.l_bin,
-                self.ab_bin,
-                ref_seg,
-                self.num_classes,
-            )
-        else:
-            in_common_seg = np.array([])
-            ref_seg_hist = np.array([])
-
-        return (
-            in_img,
-            torch.from_numpy(in_hist).float(),
-            in_common_seg,
-            ref_img,
-            torch.from_numpy(ref_hist).float(),
-            torch.from_numpy(ref_seg_hist).float(),
-        )
+        return in_img, in_hist, in_seg, ref_img, ref_hist, ref_seg
