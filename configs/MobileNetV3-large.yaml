@@ -1,10 +1,10 @@
 model_args:
   use_seg: true
-  hist_channels: 16
+  hist_channels: 64
   init_method: Normal
   encoder_name: mobilenetv3_large_100
   CTN_enc_hidden_list: [16, 24, 40, 112, 960]
-  CTN_dec_hidden_list: [960, 112, 40, 24, 16]
+  CTN_dec_hidden_list: [960, 256, 128, 64, 64]
   HEN_hidden: 128
 
 optimizer_args:
@@ -18,9 +18,9 @@ optimizer_args:
 trainer_args:
   accelerator: gpu
   devices: 7
-  max_epochs: 100
+  max_epochs: 20
   precision: 16 # 32 or 16
-  ckpt_dir: output/MobileNetV3
+  ckpt_dir: output/MobileNetV3-Distill
 
 dataset_args:
   raw_dir: data/raw
