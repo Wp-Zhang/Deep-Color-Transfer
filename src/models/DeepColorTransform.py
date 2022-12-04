@@ -193,3 +193,29 @@ class DeepColorTransfer(nn.Module):
         multi_loss /= len(decoder_out) - 1
 
         return img_loss, lambda1 * hist_loss, lambda2 * multi_loss
+
+    def soft_loss(
+        self,
+        teacher_out: List[torch.Tensor],
+        decoder_out: List[torch.Tensor],
+        lambda0: float,
+        lambda1: float,
+        lambda2: float,
+    ) -> torch.Tensor:
+        out_img = decoder_out[-1]
+        # * image loss
+        img_loss = (teacher_out[-1] - out_img) ** 2 * lambda0[..., None, None, None]
+        img_loss = img_loss.mean()
+
+        # * histogram loss
+        out_hist = get_histogram2d(out_img, self.histogram)
+        label_hist = get_histogram2d(teacher_out[-1], self.histogram)
+        hist_loss = F.mse_loss(out_hist, label_hist)
+
+        # * multi-scale loss
+        multi_loss = 0
+        for i, dec_out in enumerate(decoder_out[:-1]):
+            multi_loss += F.mse_loss(dec_out, teacher_out[i])
+        multi_loss /= len(decoder_out) - 1
+
+        return img_loss, lambda1 * hist_loss, lambda2 * multi_loss

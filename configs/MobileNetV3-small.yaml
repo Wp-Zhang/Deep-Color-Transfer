@@ -1,16 +1,16 @@
 model_args:
   use_seg: true
-  hist_channels: 16
+  hist_channels: 64
   init_method: Normal
   encoder_name: mobilenetv3_large_100
   CTN_enc_hidden_list: [16, 16, 24, 48, 576]
-  CTN_dec_hidden_list: [576, 48, 24, 16, 16]
+  CTN_dec_hidden_list: [576, 256, 128, 64, 64]
   HEN_hidden: 128
 
 optimizer_args:
   loss_lambda1: 500 # 1.5
   loss_lambda2: 0.5
-  learning_rate: 0.00005
+  learning_rate: 0.0002
   beta1: 0.5
   beta2: 0.999
 
