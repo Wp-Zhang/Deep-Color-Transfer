@@ -28,7 +28,7 @@ def LAB2RGB(I):
 
 
 def RGB2HSV_shift_LAB(I):
-    shift, shift2 = random.random(), random.random()
+    shift, shift2 = random.random(), random.random() * 1.2
     shift2 = 0.3 if shift2 < 0.3 else shift2
     # Get Original L in LAB, shift H in HSV
 
