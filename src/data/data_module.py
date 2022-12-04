@@ -74,6 +74,7 @@ class Adobe5kDataModule(LightningDataModule):
                 self.l_bin,
                 self.ab_bin,
                 self.num_classes,
+                if_aug=False,
             )
 
     def train_dataloader(self):
@@ -109,8 +110,7 @@ class TestDataModule(LightningDataModule):
         ab_bin: int,
         num_classes: int,
         use_seg: bool,
-        batch_size: int,
-        num_workers: int = 8,
+        resize_dim: int,
     ):
         super().__init__()
 
@@ -119,19 +119,23 @@ class TestDataModule(LightningDataModule):
         self.ab_bin = ab_bin
         self.num_classes = num_classes
         self.use_seg = use_seg
-        self.batch_size = batch_size
-        self.num_workers = num_workers
+        self.resize_dim = int(resize_dim)
 
     def setup(self, stage) -> None:
         if stage == "predict" or stage is None:
             self.dataset = TestDataset(
-                self.test_dir, self.l_bin, self.ab_bin, self.num_classes, self.use_seg
+                self.test_dir,
+                self.l_bin,
+                self.ab_bin,
+                self.num_classes,
+                self.use_seg,
+                self.resize_dim,
             )
 
     def predict_dataloader(self):
         return DataLoader(
             self.dataset,
             shuffle=False,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
+            batch_size=1,
+            num_workers=0,
         )

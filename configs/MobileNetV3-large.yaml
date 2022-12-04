@@ -1,30 +1,31 @@
 model_args:
   use_seg: true
-  hist_channels: 16
+  hist_channels: 64
   init_method: Normal
   encoder_name: mobilenetv3_large_100
   CTN_enc_hidden_list: [16, 24, 40, 112, 960]
-  CTN_dec_hidden_list: [960, 112, 40, 24, 16]
+  CTN_dec_hidden_list: [960, 256, 128, 64, 64]
   HEN_hidden: 128
 
 optimizer_args:
-  loss_lambda1: 1000 # 1.5
-  loss_lambda2: 0.5
+  loss_lambda0: 0.5
+  loss_lambda1: 10 # 1.5
+  loss_lambda2: 10 # 0.5
   learning_rate: 0.00005
   beta1: 0.5
   beta2: 0.999
 
 trainer_args:
   accelerator: gpu
-  devices: 8
-  max_epochs: 100
+  devices: 7
+  max_epochs: 20
   precision: 16 # 32 or 16
-  ckpt_dir: output/lightning_ckpt
+  ckpt_dir: output/MobileNetV3-Distill
 
 dataset_args:
   raw_dir: data/raw
 
-  img_dim: [224, 224]
+  img_dim: [256, 256]
   l_bin: 8
   ab_bin: 64
   num_classes: 150

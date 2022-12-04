@@ -2,16 +2,16 @@ model_args:
   use_seg: true
   hist_channels: 64
   init_method: Normal
-  encoder_name: Original
-  CTN_enc_hidden_list: [64, 128, 256, 512, 512]
-  CTN_dec_hidden_list: [512, 256, 128, 64, 64]
+  encoder_name: mobilenetv3_small_100
+  CTN_enc_hidden_list: [16, 16, 24, 48, 576]
+  CTN_dec_hidden_list: [576, 48, 48, 64, 64]
   HEN_hidden: 128
 
 optimizer_args:
   loss_lambda0: 0.5
   loss_lambda1: 10 # 1.5
-  loss_lambda2: 10 # 0.5
-  learning_rate: 0.00005
+  loss_lambda2: 10
+  learning_rate: 0.0002
   beta1: 0.5
   beta2: 0.999
 
@@ -20,7 +20,7 @@ trainer_args:
   devices: 7
   max_epochs: 100
   precision: 16 # 32 or 16
-  ckpt_dir: output/lightning_ckpt
+  ckpt_dir: output/MobileNetV3Distill
 
 dataset_args:
   raw_dir: data/raw
@@ -30,5 +30,5 @@ dataset_args:
   ab_bin: 64
   num_classes: 150
 
-  batch_size: 6
+  batch_size: 8
   num_workers: 8

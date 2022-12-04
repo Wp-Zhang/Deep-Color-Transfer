@@ -1,3 +1,4 @@
+import torch
 import torchvision.transforms as T
 import numpy as np
 from skimage import color
@@ -28,7 +29,7 @@ def LAB2RGB(I):
 
 
 def RGB2HSV_shift_LAB(I):
-    shift, shift2 = random.random(), random.random()
+    shift, shift2 = random.random(), random.random() * 1.2
     shift2 = 0.3 if shift2 < 0.3 else shift2
     # Get Original L in LAB, shift H in HSV
 
@@ -67,3 +68,11 @@ def get_transform_hueshiftlab():
         T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ]
     return T.Compose(transform_list)
+
+
+def post_process_img(img: torch.Tensor):
+    img = (img * 0.5 + 0.5) * 255
+    img = img.cpu().numpy()
+    img = LAB2RGB(img.transpose(1, 2, 0))
+
+    return img

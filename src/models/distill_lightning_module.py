@@ -10,6 +10,8 @@ from typing import List
 class Model(pl.LightningModule):
     def __init__(
         self,
+        teacher,
+        soft_loss_weight,
         # * Model parameters
         l_bin: int,
         ab_bin: int,
@@ -40,6 +42,8 @@ class Model(pl.LightningModule):
         self.save_hyperparameters()
 
         # * --------------------- Define model --------------------
+        self.teacher = teacher
+        self.alpha = soft_loss_weight
         self.model = DeepColorTransfer(
             l_bin,
             ab_bin,
@@ -78,6 +82,9 @@ class Model(pl.LightningModule):
         decoder_out = self.model(
             in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist
         )
+        teacher_out = self.teacher(
+            in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist
+        )
 
         # * calculate loss
         loss_weight0 = 1 - (1 - self.loss_lambda0) * is_identical.float()
@@ -88,12 +95,25 @@ class Model(pl.LightningModule):
             self.loss_lambda1,
             self.loss_lambda2,
         )
+        soft_loss = self.model.soft_loss(
+            teacher_out,
+            decoder_out,
+            loss_weight0,
+            self.loss_lambda1,
+            self.loss_lambda2,
+        )
 
         self.log("train_loss", sum(loss))
         self.log("train_img_loss", loss[0])
         self.log("train_hist_loss", loss[1])
         self.log("train_multi_loss", loss[2])
-        return sum(loss)
+
+        self.log("train_tch_loss", sum(soft_loss))
+        self.log("train_tch_img_loss", soft_loss[0])
+        self.log("train_tch_hist_loss", soft_loss[1])
+        self.log("train_tch_multi_loss", soft_loss[2])
+
+        return sum(loss) * (1 - self.alpha) + self.alpha * sum(soft_loss)
 
     def validation_step(self, batch, batch_idx, dataloader_idx):
         (
@@ -110,6 +130,9 @@ class Model(pl.LightningModule):
         decoder_out = self.model(
             in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist
         )
+        teacher_out = self.teacher(
+            in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist
+        )
 
         if dataloader_idx == 0:
             # * Normal validation
@@ -121,12 +144,24 @@ class Model(pl.LightningModule):
                 self.loss_lambda1,
                 self.loss_lambda2,
             )
+            soft_loss = self.model.soft_loss(
+                teacher_out,
+                decoder_out,
+                loss_weight0,
+                self.loss_lambda1,
+                self.loss_lambda2,
+            )
 
             self.log("val_loss", sum(loss), prog_bar=True, sync_dist=True)
             self.log("val_img_loss", loss[0])
             self.log("val_hist_loss", loss[1])
             self.log("val_multi_loss", loss[2])
-            return sum(loss)
+
+            self.log("val_tch_loss", sum(soft_loss), prog_bar=True, sync_dist=True)
+            self.log("val_tch_img_loss", soft_loss[0])
+            self.log("val_tch_hist_loss", soft_loss[1])
+            self.log("val_tch_multi_loss", soft_loss[2])
+            return sum(loss) * (1 - self.alpha) + self.alpha * sum(soft_loss)
         else:
             return in_img, ref_img, decoder_out[-1]
 
@@ -165,17 +200,6 @@ class Model(pl.LightningModule):
                             caption=["Input", "Reference", "Output"],
                         )
                         cnt += 1
-
-    def predict_step(self, batch, batch_idx):
-        out_img = self.model.inference(*batch)[0]
-        out_img = post_process_img(out_img)
-        return out_img
-
-    def on_predict_epoch_end(self, results):
-        res = []
-        for batch in results:
-            res.extend(batch)
-        return res
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(

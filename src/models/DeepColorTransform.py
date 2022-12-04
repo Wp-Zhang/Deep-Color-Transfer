@@ -6,8 +6,9 @@ import torchvision.transforms as T
 from .ColorTransferNetwork import get_CTN
 from .HistogramEncodingNetwork import get_HEN
 from .LearnableHistogram import LearnableHistogram, get_histogram2d
+from ..data.preprocessing import get_histogram
 
-from typing import List
+from typing import List, Union
 
 
 class DeepColorTransfer(nn.Module):
@@ -132,6 +133,72 @@ class DeepColorTransfer(nn.Module):
 
         return CTN_out
 
+    def inference(
+        self,
+        in_img: torch.Tensor,  # (batch, 3, h1, w1)
+        in_hist: torch.Tensor,  # (batch, l_bin+1, ab_bin, ab_bin)
+        in_seg: Union[torch.Tensor, None],  # (batch, h1, w1)
+        ref_img: torch.Tensor,  # (batch, 3, h2, w2)
+        ref_hist: torch.Tensor,  # (batch, l_bin+1, ab_bin, ab_bin)
+        ref_seg: Union[torch.Tensor, None],  # (batch, h2, w2)
+    ):
+        assert in_img.size(0) == 1, "Inference only supports batchsize of 1"
+        # * Get basic info
+        batch_size, _, in_w, in_h = in_img.size()
+        ref_w, ref_h = ref_img.size()[2:]
+
+        # * ========================= HEN =========================
+
+        # * ----------------- encoding histograms -----------------
+
+        # * Encode histogram of input and reference image
+        input_hist_enc = self.HEN(in_hist)
+        ref_hist_enc = self.HEN(ref_hist)
+        # * Tile the encoded histogram
+        # (batch, 64, h1, w1)
+        input_hist_enc_tile = input_hist_enc.repeat(1, 1, in_w, in_h)
+        # (batch, 64, h2, w2)
+        if not self.use_seg:
+            ref_hist_enc_tile = ref_hist_enc.repeat(1, 1, ref_w, ref_h)
+
+        # * ---------- segment-wise semantic replacement ----------
+
+        else:
+            ref_hist_enc_tile = ref_hist_enc.repeat(1, 1, in_w, in_h)
+            device = in_img.device
+            for i in range(0, self.num_classes):
+                in_seg_num = torch.sum(in_seg == i)
+                ref_seg_num = torch.sum(ref_seg == i)
+                if (in_seg_num > 0) and (ref_seg_num > 0):
+                    mask_img = torch.mul(ref_img, (ref_seg == i).to(device).float())
+                    mask_hist = get_histogram(
+                        mask_img[0].cpu().numpy(), self.l_bin, self.ab_bin
+                    )
+                    mask_hist = torch.from_numpy(mask_hist).to(device).float()
+                    hist_enc = self.HEN(mask_hist[None, ...])
+                    mask = in_seg.squeeze(0) == i
+                    ref_hist_enc_tile[:, :, mask] = (
+                        hist_enc.repeat(1, 1, ref_hist_enc_tile[:, :, mask].size(2), 1)
+                        .squeeze(0)
+                        .permute(2, 0, 1)
+                    )
+
+        # * -------------------- padding result -------------------
+        # (batch, 64, h1+2*pad, w1+2*pad)
+        in_HEN_out = self._rep_pad(input_hist_enc_tile)
+        tar_HEN_out = self._rep_pad(ref_hist_enc_tile)
+
+        # * ========================= CTN =========================
+
+        CTN_out = self.CTN(self._rep_pad(in_img), in_HEN_out, tar_HEN_out)
+
+        # * =================== return result =====================
+        out_img = CTN_out[-1]
+        out_img = self._unpad(out_img, self.pad)
+        CTN_out[-1] = out_img
+
+        return CTN_out[-1]
+
     def _rep_pad(self, tensor: torch.Tensor) -> torch.Tensor:
         """Replication padding
 
@@ -170,12 +237,14 @@ class DeepColorTransfer(nn.Module):
         self,
         label_img: torch.Tensor,
         decoder_out: List[torch.Tensor],
+        lambda0: float,
         lambda1: float,
         lambda2: float,
     ) -> torch.Tensor:
         out_img = decoder_out[-1]
         # * image loss
-        img_loss = F.mse_loss(out_img, label_img)
+        img_loss = (label_img - out_img) ** 2 * lambda0[..., None, None, None]
+        img_loss = img_loss.mean()
 
         # * histogram loss
         out_hist = get_histogram2d(out_img, self.histogram)
@@ -188,6 +257,32 @@ class DeepColorTransfer(nn.Module):
             upsample = self._unpad(dec_out, self.pad // 2 ** (i + 1))
             label = T.Resize(upsample.size()[-2:])(label_img)
             multi_loss += F.mse_loss(upsample, label)
+        multi_loss /= len(decoder_out) - 1
+
+        return img_loss, lambda1 * hist_loss, lambda2 * multi_loss
+
+    def soft_loss(
+        self,
+        teacher_out: List[torch.Tensor],
+        decoder_out: List[torch.Tensor],
+        lambda0: float,
+        lambda1: float,
+        lambda2: float,
+    ) -> torch.Tensor:
+        out_img = decoder_out[-1]
+        # * image loss
+        img_loss = (teacher_out[-1] - out_img) ** 2 * lambda0[..., None, None, None]
+        img_loss = img_loss.mean()
+
+        # * histogram loss
+        out_hist = get_histogram2d(out_img, self.histogram)
+        label_hist = get_histogram2d(teacher_out[-1], self.histogram)
+        hist_loss = F.mse_loss(out_hist, label_hist)
+
+        # * multi-scale loss
+        multi_loss = 0
+        for i, dec_out in enumerate(decoder_out[:-1]):
+            multi_loss += F.mse_loss(dec_out, teacher_out[i])
         multi_loss /= len(decoder_out) - 1
 
         return img_loss, lambda1 * hist_loss, lambda2 * multi_loss
