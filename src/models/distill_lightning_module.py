@@ -102,7 +102,7 @@ class Model(pl.LightningModule):
             self.loss_lambda1,
             self.loss_lambda2,
         )
-        soft_loss = self.model.calc_loss(
+        soft_loss = self.model.soft_loss(
             teacher_out,
             decoder_out,
             loss_weight0,
@@ -151,7 +151,7 @@ class Model(pl.LightningModule):
                 self.loss_lambda1,
                 self.loss_lambda2,
             )
-            soft_loss = self.model.calc_loss(
+            soft_loss = self.model.soft_loss(
                 teacher_out,
                 decoder_out,
                 loss_weight0,

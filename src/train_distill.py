@@ -25,6 +25,11 @@ if __name__ == "__main__":
         help="path to the configuration file",
     )
     parser.add_argument(
+        "--teacher-weights",
+        default=None,
+        help="Teacher weights path",
+    )
+    parser.add_argument(
         "--name",
         default=None,
         help="W&B runner name",
@@ -41,7 +46,7 @@ if __name__ == "__main__":
     model_args2 = cfg2.model_args
     optimizer_args2 = cfg2.optimizer_args
     dataset_args2 = cfg2.dataset_args
-    teacher_weights = torch.load("/root/autodl-tmp/weights.pt")
+    teacher_weights = torch.load(args.teacher_weights)
 
     dm = Adobe5kDataModule(
         trainset_dir=dataset_args.raw_dir,
@@ -65,6 +70,7 @@ if __name__ == "__main__":
 
     model = DistillModel(
         teacher=teacher.model,
+        soft_loss_weight=0.5,
         l_bin=dataset_args.l_bin,
         ab_bin=dataset_args.ab_bin,
         num_classes=dataset_args.num_classes,
@@ -72,6 +78,8 @@ if __name__ == "__main__":
         **optimizer_args,
     )
     model.model.HEN = teacher.model.HEN
+    for parameter in model.model.HEN.parameters():
+        parameter.requires_grad = False
 
     wandb_logger = WandbLogger(project="Deep Color Transform Distill", name=args.name)
     try:
