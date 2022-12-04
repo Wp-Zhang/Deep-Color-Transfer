@@ -161,11 +161,18 @@ class Adobe5kDataset(Dataset):
 
 class TestDataset(Dataset):
     def __init__(
-        self, data_dir: str, l_bin: int, ab_bin: int, num_classes: int, use_seg: bool
+        self,
+        data_dir: str,
+        l_bin: int,
+        ab_bin: int,
+        num_classes: int,
+        use_seg: bool,
+        resize_dim: int = None,
     ):
         super(Dataset, self).__init__()
 
         self.data_dir = Path(data_dir)
+        self.resize_dim = resize_dim
 
         self.in_img_dir = self.data_dir / "in_imgs"
         self.ref_img_dir = self.data_dir / "ref_imgs"
@@ -202,6 +209,10 @@ class TestDataset(Dataset):
             in_seg = torch.from_numpy(in_seg)
             ref_seg = torch.from_numpy(ref_seg)
         else:
+            if self.resize_dim is not None:
+                resize = T.Resize(self.resize_dim)
+                in_img = resize(in_img)
+                ref_img = resize(ref_img)
             in_seg, ref_seg = np.array([0]), np.array([0])
             in_seg = torch.from_numpy(in_seg)
             ref_seg = torch.from_numpy(ref_seg)

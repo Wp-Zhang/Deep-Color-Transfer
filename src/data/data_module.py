@@ -104,7 +104,13 @@ class Adobe5kDataModule(LightningDataModule):
 
 class TestDataModule(LightningDataModule):
     def __init__(
-        self, testset_dir: str, l_bin: int, ab_bin: int, num_classes: int, use_seg: bool
+        self,
+        testset_dir: str,
+        l_bin: int,
+        ab_bin: int,
+        num_classes: int,
+        use_seg: bool,
+        resize_dim: int,
     ):
         super().__init__()
 
@@ -113,11 +119,17 @@ class TestDataModule(LightningDataModule):
         self.ab_bin = ab_bin
         self.num_classes = num_classes
         self.use_seg = use_seg
+        self.resize_dim = int(resize_dim)
 
     def setup(self, stage) -> None:
         if stage == "predict" or stage is None:
             self.dataset = TestDataset(
-                self.test_dir, self.l_bin, self.ab_bin, self.num_classes, self.use_seg
+                self.test_dir,
+                self.l_bin,
+                self.ab_bin,
+                self.num_classes,
+                self.use_seg,
+                self.resize_dim,
             )
 
     def predict_dataloader(self):

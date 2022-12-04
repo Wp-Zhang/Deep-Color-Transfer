@@ -30,6 +30,11 @@ if __name__ == "__main__":
         help="Test data dir",
     )
     parser.add_argument(
+        "--resize_dim",
+        default=None,
+        help="Resize dimension",
+    )
+    parser.add_argument(
         "--use_seg",
         action="store_true",
         help="Whether to use seg",
@@ -48,6 +53,7 @@ if __name__ == "__main__":
         ab_bin=dataset_args.ab_bin,
         num_classes=dataset_args.num_classes,
         use_seg=args.use_seg,
+        resize_dim=args.resize_dim,
     )
     model = Model(
         l_bin=dataset_args.l_bin,
@@ -56,7 +62,9 @@ if __name__ == "__main__":
         **model_args,
         **optimizer_args,
     )
-    model.model.load_state_dict(torch.load(args.weights))
+    model.model.use_seg = args.use_seg
+    # model.model.load_state_dict(torch.load(args.weights))
+    model.load_state_dict(torch.load(args.weights))
 
     trainer = Trainer(accelerator="auto")
 

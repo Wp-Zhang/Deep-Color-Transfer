@@ -172,7 +172,7 @@ class DeepColorTransfer(nn.Module):
                 if (in_seg_num > 0) and (ref_seg_num > 0):
                     mask_img = torch.mul(ref_img, (ref_seg == i).to(device).float())
                     mask_hist = get_histogram(
-                        mask_img[0].numpy(), self.l_bin, self.ab_bin
+                        mask_img[0].cpu().numpy(), self.l_bin, self.ab_bin
                     )
                     mask_hist = torch.from_numpy(mask_hist).to(device).float()
                     hist_enc = self.HEN(mask_hist[None, ...])
