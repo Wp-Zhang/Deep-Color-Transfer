@@ -11,35 +11,23 @@ Project Organization
 ------------
 
     ├── LICENSE
-    ├── README.md          <- The top-level README for developers using this project.
-    ├── data
-    |   ├── raw            <- Raw dataset directory
-    |   |
-    |   └── processed      <- Processed dataset directory, ready for model training
+    ├── README.md
+    │
+    ├── data               <- Data directory
     │
     ├── docs               <- Project website
     │
-    ├── models             <- Trained and serialized models, model predictions, or model summaries
+    ├── notebooks          <- Jupyter notebooks.
     │
-    ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's initials, and a short `-` delimited description, e.g.
-    │                         `1.0-jqp-initial-data-exploration`.
+    ├── references         <- Referenced materials.
     │
-    ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
-    │
-    ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-    |   |
-    │   └── figures        <- Generated graphics and figures to be used in reporting
-    │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-    │                         generated with `pip freeze > requirements.txt`
+    ├── requirements.txt   <- The requirements file for reproducing the experiments.
     │
     └── src                <- Source code for use in this project.
         │
-        ├── data           <- Scripts to download or generate data
+        ├── data           <- Scripts to process data.
         │  
-        ├── models         <- Scripts to train models and then use trained models to make
-        │                     predictions
+        ├── models         <- Scripts to construct models
         │
         └── util           <- Scripts of tool functions
 
@@ -53,12 +41,12 @@ We've uploaded the datasets to Kaggle: [MIT-Adobe 5K Dataset](https://www.kaggle
    data
    └── raw
       ├── adobe_5k
-      |   ├── a
-      |   ├── b
-      |   ├── c
-      |   ├── d
-      |   ├── e
-      |   └── raw
+      │   ├── a
+      │   ├── b
+      │   ├── c
+      │   ├── d
+      │   ├── e
+      │   └── raw
       └── segs
    ```
 
