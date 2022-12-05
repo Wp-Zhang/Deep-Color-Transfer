@@ -14,7 +14,7 @@ The authors of ***Deep Color Transfer Using Histogram Analogy***[[1]]({{< relref
 
 ## Implementation Details
 
-As the authors did in [[1]]({{< relref path="progress.md#ref1">}}), we’ll train our model on a paired dataset constructed from the MIT-Adobe 5K dataset[[2]]({{< relref path="progress.md#ref2">}}) which consists of six sets, each of which contains 5,000 images. Since using the dataset only provides image pairs with a fixed number of combinations, we also follow the authors to perform color augmentation by transforming the average hue and saturation of the original images to produce more diverse image pairs. In addition, as an ideally trained model must produce the output image the same as the source image if the histograms of the two images are the same, we used identical source and reference image pairs to stabilize the network output. We implement our network on Pytorch. We use the Adam optimizer with the fixed learning rate \\(5*10^{-5}\\), \\(\beta_1=0.5\\), and
+As the authors did in [[1]]({{< relref path="progress.md#ref1">}}), we’ll train our model on a paired dataset constructed from the MIT-Adobe 5K dataset[[2]]({{< relref path="progress.md#ref2">}}) which consists of five sets, each of which contains 5,000 images. Since using the dataset only provides image pairs with a fixed number of combinations, we also follow the authors to perform color augmentation by transforming the average hue and saturation of the original images to produce more diverse image pairs. In addition, as an ideally trained model must produce the output image the same as the source image if the histograms of the two images are the same, we used identical source and reference image pairs to stabilize the network output. We implement our network on Pytorch. We use the Adam optimizer with the fixed learning rate \\(5*10^{-5}\\), \\(\beta_1=0.5\\), and
  \\(\beta_2=0.999\\). As we jointly train HEN and CTN, the objective function is \\(L_{total} = L_{image} + \lambda_1 L_{hist} + \lambda_2 L_{multi}\\), where \\(L_{image}\\), \\(L_{hist}\\) and \\(L_{multi}\\) are a image loss, a histogram loss, and a multi-scale loss. We used \\(\lambda_1=1.5\\) and \\(\lambda_2=0.5\\). We train the network for 100 epochs.
 
 ## Findings
@@ -25,7 +25,7 @@ As the image semantic segmentation map may have a huge impact on the final outpu
 
 With accurate segmentation maps generated, we tested 4 sets of image pairs and the result is showed in Fig 3. When the reference image and input image have similar semantic content, the model can generate a great color transfer without being fed with segmentation maps. However, when there's a huge content difference, segmentation maps can help improve the model performance (see row 3). The model works well even when the reference image is just a color palette.
 
-![experiment result](exp.png "Fig. 3 Experiment results on different ")
+![experiment result](exp.png "Fig. 3 Experiment results on different cases.")
 
 ## Plans
 
