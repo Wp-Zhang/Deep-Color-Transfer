@@ -5,7 +5,16 @@
     
       <url>
             <loc>https://wp-zhang.github.io/Deep-Color-Transfer/</loc>
-            <lastmod>2022-10-23T00:00:00+00:00</lastmod>
+            <lastmod>2022-12-05T00:00:00+00:00</lastmod>
+            <changefreq>daily</changefreq>
+            <priority>0.5</priority>
+          </url>
+    
+  
+    
+      <url>
+            <loc>https://wp-zhang.github.io/Deep-Color-Transfer/posts/report/</loc>
+            <lastmod>2022-12-05T00:00:00+00:00</lastmod>
             <changefreq>daily</changefreq>
             <priority>0.5</priority>
           </url>
@@ -14,7 +23,7 @@
     
       <url>
             <loc>https://wp-zhang.github.io/Deep-Color-Transfer/posts/</loc>
-            <lastmod>2022-10-23T00:00:00+00:00</lastmod>
+            <lastmod>2022-12-05T00:00:00+00:00</lastmod>
             <changefreq>daily</changefreq>
             <priority>0.5</priority>
           </url>

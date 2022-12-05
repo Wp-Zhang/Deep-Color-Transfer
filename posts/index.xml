@@ -6,7 +6,16 @@
     <description>Recent content in Posts on Deep Color Transfer</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sun, 23 Oct 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://wp-zhang.github.io/Deep-Color-Transfer/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 05 Dec 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://wp-zhang.github.io/Deep-Color-Transfer/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Final Report</title>
+      <link>https://wp-zhang.github.io/Deep-Color-Transfer/posts/report/</link>
+      <pubDate>Mon, 05 Dec 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://wp-zhang.github.io/Deep-Color-Transfer/posts/report/</guid>
+      <description>Introduction # In this project, we are trying to build a deep-learning model for color transfer between images. Unlike style transfer which will modify objects in the image, color transfer focuses on transferring the color characteristics from the reference image to the input image while keeping the objects unchanged.</description>
+    </item>
+    
     <item>
       <title>Progress Report</title>
       <link>https://wp-zhang.github.io/Deep-Color-Transfer/posts/progress/</link>
