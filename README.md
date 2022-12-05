@@ -32,6 +32,10 @@ Project Organization
         │
         └── util           <- Scripts of tool functions
 
+## Environment setup
+1. Install required packages by `pip install -r requirements.txt`
+2. We used Weights & Biases to do experiment tracking, you can install it by `pip install wandb`
+3. Init Weights & Biases by `wandb init`
 
 ## Prepare dataset
 
