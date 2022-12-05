@@ -1,4 +1,5 @@
-Deep Color Transfer
+
+![logo](docs/assets/img/front-logo.png)
 ==============================
 
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/8e5c795af21f4f899f03095424f31179)](https://www.codacy.com/gh/Wp-Zhang/Deep-Color-Transfer/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Wp-Zhang/Deep-Color-Transfer&amp;utm_campaign=Badge_Grade)
