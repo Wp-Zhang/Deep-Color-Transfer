@@ -26,11 +26,7 @@ class DeepColorTransfer(nn.Module):
         CTN_dec_hidden_list: List[int],
         HEN_hidden: int,
     ):
-        """Initialize a Deep Color Transfer model.
-
-        Parameters
-        ----------
-        """
+        """Initialize a Deep Color Transfer model."""
         super(DeepColorTransfer, self).__init__()
 
         # * ---------------- Model hyper-parameters ---------------

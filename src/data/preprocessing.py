@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from PIL import Image
 
 
 def _get_ab_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
     """Get ab-space histogram of an image
+    Adopted from https://github.com/codeslake/Color_Transfer_Histogram_Analogy/blob/master/models/colorhistogram_model.py
 
     Parameters
     ----------
@@ -49,6 +49,7 @@ def _get_ab_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
 
 def _get_l_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
     """Get luminance histogram of an image
+    Adopted from https://github.com/codeslake/Color_Transfer_Histogram_Analogy/blob/master/models/colorhistogram_model.py
 
     Parameters
     ----------
@@ -186,24 +187,6 @@ def get_common_seg_map(
     return input_oh
 
 
-def resize_and_central_crop(img, resize_dim):
-    w, h = img.size
-    w2, h2 = resize_dim
-    if h > w:
-        img = img.resize((w2, int(h / w * w2)), resample=Image.Resampling.NEAREST)
-    else:
-        img = img.resize((int(w / h * h2), h2), resample=Image.Resampling.NEAREST)
-    # * Central crop
-    w3, h3 = img.size
-    left = (w3 - w2) / 2
-    top = (h3 - h2) / 2
-    right = (w3 + w2) / 2
-    bottom = (h3 + h2) / 2
-    img = img.crop((left, top, right, bottom))
-
-    return img
-
-
 def get_dataset_info(raw_dir: str):
     """Generate dataset info and save as a .csv file.
 
@@ -231,19 +214,6 @@ def get_dataset_info(raw_dir: str):
         tmp["ref_img"] = f"{expert}/" + tmp["ref_img"]
         tmp["trans"] = "Original"
         info = pd.concat([info, tmp], ignore_index=True)
-
-    # # * Color augmentation
-    # for expert in ["a", "b", "c", "d", "e", "raw"]:
-    #     ref_names = (raw_dir / "adobe_5k" / expert).glob("*.jpg")
-    #     ref_names = sorted([x.name for x in ref_names])
-    #     tmp = pd.DataFrame()
-    #     tmp["in_seg"] = seg_names
-    #     tmp["in_img"] = ref_names
-    #     tmp["ref_img"] = ref_names
-    #     tmp["in_img"] = f"{expert}/" + tmp["in_img"]
-    #     tmp["ref_img"] = f"{expert}/" + tmp["ref_img"]
-    #     tmp["trans"] = "HueShift"
-    # info = pd.concat([info, tmp], ignore_index=True)
 
     # * Identical pairs
     for expert in ["a", "b", "c", "d", "e"]:
