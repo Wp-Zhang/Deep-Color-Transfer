@@ -4,7 +4,6 @@ import torchvision.transforms as T
 import torchvision.transforms.functional as TF
 import random
 import pandas as pd
-import cv2
 from PIL import Image
 from pathlib import Path
 import numpy as np
@@ -51,7 +50,6 @@ class Adobe5kDataset(Dataset):
 
     def augmentation(self, in_img, in_seg, ref_img, ref_seg, rand=True):
         # Resize
-        # resize = T.Resize((286, 286))
         resize = T.Resize(286, interpolation=T.InterpolationMode.NEAREST)
         in_img = resize(in_img)
         in_seg = resize(in_seg)
@@ -95,8 +93,6 @@ class Adobe5kDataset(Dataset):
 
         in_img = Image.open(str(self.img_dir / in_name)).convert("RGB")
         ref_img = Image.open(str(self.img_dir / ref_name)).convert("RGB")
-        # in_img = resize_and_central_crop(in_img, (512, 512))
-        # ref_img = resize_and_central_crop(ref_img, (512, 512))
 
         in_seg = Image.fromarray(
             np.load(str(self.seg_dir / in_seg_name), allow_pickle=True)
@@ -104,10 +100,9 @@ class Adobe5kDataset(Dataset):
         ref_seg = Image.fromarray(
             np.load(str(self.seg_dir / ref_seg_name), allow_pickle=True)
         )
-        # in_seg = resize_and_central_crop(in_seg, (512, 512))
-        # ref_seg = resize_and_central_crop(ref_seg, (512, 512))
 
         if self.if_aug:
+            # * Trainset
             in_img, in_seg, ref_img, ref_seg = self.augmentation(
                 in_img, in_seg, ref_img, ref_seg
             )
@@ -118,17 +113,10 @@ class Adobe5kDataset(Dataset):
                 in_img = self.huelab_transform(in_img)
                 ref_img = in_img.clone()
         else:
+            # * Demo for visualization
             in_img, in_seg, ref_img, ref_seg = self.augmentation(
                 in_img, in_seg, ref_img, ref_seg, rand=False
             )
-            # in_seg = Image.fromarray(in_seg).resize(
-            #     in_img.size[:2], resample=Image.Resampling.NEAREST
-            # )
-            # ref_seg = Image.fromarray(ref_seg).resize(
-            #     ref_img.size[:2], resample=Image.Resampling.NEAREST
-            # )
-            # in_seg = np.array(in_seg)
-            # ref_seg = np.array(ref_seg)
             if trans == "HueShift":
                 in_img = self.lab_transform(in_img)
                 ref_img = self.huelab_transform(ref_img)

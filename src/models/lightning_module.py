@@ -29,13 +29,7 @@ class Model(pl.LightningModule):
         beta1: float,
         beta2: float,
     ):
-        """Initialize a Deep Color Transfer model.
-
-        Parameters
-        ----------
-        cfg : str
-            Config path.
-        """
+        """Initialize a lightning model for Deep Color Transfer."""
         super(Model, self).__init__()
         self.save_hyperparameters()
 
@@ -141,7 +135,7 @@ class Model(pl.LightningModule):
             full_demo_out = [outputs[1]]
 
         if self.global_rank == 0:
-            # * Visualization demo
+            # * Visualize demo
             pair_names = {
                 0: "High Relevance",
                 1: "Weak Relevance",

@@ -1,8 +1,8 @@
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 from pytorch_lightning import LightningDataModule
 from pathlib import Path
 import pandas as pd
-from typing import Tuple
+from typing import Tuple, Union
 from .dataset import Adobe5kDataset, TestDataset
 
 
@@ -17,6 +17,25 @@ class Adobe5kDataModule(LightningDataModule):
         batch_size: int,
         num_workers: int = 8,
     ):
+        """Adobe5k Data Module for training
+
+        Parameters
+        ----------
+        trainset_dir : str
+            Trainset directory
+        img_dim : Tuple[int, int]
+            Image size
+        l_bin : int
+            Bin number of l channel in lab color space
+        ab_bin : int
+            Bin number of a,b channels in lab color space
+        num_classes : int
+            Number of different semantic segmentation classes
+        batch_size : int
+            Batch size
+        num_workers : int, optional
+            Number of workers used for loading data, by default 8
+        """
         super().__init__()
 
         self.trainset_dir = trainset_dir
@@ -110,8 +129,25 @@ class TestDataModule(LightningDataModule):
         ab_bin: int,
         num_classes: int,
         use_seg: bool,
-        resize_dim: int,
+        resize_dim: Union[int, None],
     ):
+        """Data module for model inference
+
+        Parameters
+        ----------
+        testset_dir : str
+            Test data directory
+        l_bin : int
+            Bin number of l channel in lab color space
+        ab_bin : int
+            Bin number of a,b channels in lab color space
+        num_classes : int
+            Number of different semantic segmentation classes
+        use_seg : bool
+            If input include semantic segmentation results
+        resize_dim : Union[int, None]
+            Scale the images into target size if specified
+        """
         super().__init__()
 
         self.test_dir = testset_dir

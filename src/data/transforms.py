@@ -1,3 +1,5 @@
+# * Some code adopted from https://github.com/codeslake/Color_Transfer_Histogram_Analogy/blob/master/data/base_dataset.py
+
 import torch
 import torchvision.transforms as T
 import numpy as np
@@ -53,6 +55,7 @@ def RGB2HSV_shift_LAB(I):
 
 
 def get_transform_lab():
+    """Image transformations for test data"""
     transform_list = [
         T.Lambda(lambda img: RGB2LAB(np.array(img))),
         T.ToTensor(),
@@ -62,6 +65,7 @@ def get_transform_lab():
 
 
 def get_transform_hueshiftlab():
+    """Image transformations for training data"""
     transform_list = [
         T.Lambda(lambda img: RGB2HSV_shift_LAB(np.array(img))),
         T.ToTensor(),
@@ -70,7 +74,19 @@ def get_transform_hueshiftlab():
     return T.Compose(transform_list)
 
 
-def post_process_img(img: torch.Tensor):
+def post_process_img(img: torch.Tensor) -> "np.ndarray":
+    """Turn the model output as an image
+
+    Parameters
+    ----------
+    img : torch.Tensor
+        Model output
+
+    Returns
+    -------
+    np.ndarray
+        Image array that can be directly showed
+    """
     img = (img * 0.5 + 0.5) * 255
     img = img.cpu().numpy()
     img = LAB2RGB(img.transpose(1, 2, 0))
