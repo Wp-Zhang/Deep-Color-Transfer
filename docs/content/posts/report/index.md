@@ -131,6 +131,12 @@ Our model can produce excellent color transfer results for image pairs with diff
 
 In the future, encoder and decoder in the Color Transfer Network with different structures, e.g. transformers, can be tried. The structure of the Color Transfer Network can also be redesigned to support high-resolution input and output better.
 
+## 7. Statement of contributions
+
+**Weipeng Zhang:** code, dataset preparation, model training, presentation, report.
+
+**Yubing Gou:** model testing and analysis, report.
+
 ---
 
 ##### [1] Zhiliang Peng, Li Dong, Hangbo Bao, Qixiang Ye, and Furu Wei. ***Beit v2: Masked image modeling with vector-quantized visual tokenizers.*** arXiv preprint arXiv:2208.06366, 2022.  {#ref1}
