@@ -10,8 +10,8 @@ from typing import List
 class Model(pl.LightningModule):
     def __init__(
         self,
-        teacher,
-        soft_loss_weight,
+        teacher: DeepColorTransfer,
+        soft_loss_weight: float,
         # * Model parameters
         l_bin: int,
         ab_bin: int,
@@ -31,13 +31,7 @@ class Model(pl.LightningModule):
         beta1: float,
         beta2: float,
     ):
-        """Initialize a Deep Color Transfer model.
-
-        Parameters
-        ----------
-        cfg : str
-            Config path.
-        """
+        """Pytorch-lightning module for training with knowledge distillation."""
         super(Model, self).__init__()
         self.save_hyperparameters()
 

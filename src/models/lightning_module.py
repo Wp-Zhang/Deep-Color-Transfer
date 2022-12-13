@@ -29,7 +29,7 @@ class Model(pl.LightningModule):
         beta1: float,
         beta2: float,
     ):
-        """Initialize a lightning model for Deep Color Transfer."""
+        """Initialize a lightning model for training"""
         super(Model, self).__init__()
         self.save_hyperparameters()
 
