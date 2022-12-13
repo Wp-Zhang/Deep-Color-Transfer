@@ -100,3 +100,15 @@ python src/train_distill.py --config PATH_TO_CONFIG --teacher-weights PATH_TO_TE
 | 0-9    | 0.5          | 10           | 10           | 0.5              |
 | 10-18  | 0.5          | 10           | 10           | 0                |
 | 19-24  | 1            | 1.5          | 0.5          | 0                |
+
+## Statement of Contributions
+
+**Weipeng Zhang:** code, dataset preparation, model training, presentation, report, website.
+
+**Yubing Gou:** dataset preparation, model testing and analysis, report.
+
+## TODO
+
+- [ ] Add unit tests
+- [ ] Upload pre-trained weights
+- [ ] Update docstrings
