@@ -26,11 +26,10 @@ Our main contributions are summarized as follows:
     The Color transfer method is constantly evolving. The conventional approaches try to match the means and standard deviations of the source to reference images or calculate probability density functions. Other solutions are also based on the local color part, including the EM algorithm and neural representations. Lee et al. [[3]]({{< relref path="report.md#ref3">}}) adopted the idea from photorealistic image style transfer[[4]]({{< relref path="report.md#ref4">}}) and introduced neural network to color transfer.
 
 ***Semantic segmentation***
-BEiT v2[[1]]({{< relref path="report.md#ref1">}}) is the latest SOTA mask modeling method published in 2022. It proposed the VQ-KD(vector-quantized knowledge distillation) method, which discretizes a continuous semantic space that supervises masked image modeling rather than relying on image pixels. This approach highly promoted the accuracy of semantic segmentation compared. The previous method that the author used addressed semantic segmentation by incorporating high-order relations
-and mixture of label contexts into MRF. They solved MRF by proposing a Convolutional Neural Network, which enables deterministic end-to-end computation in a single forward pass.
+    BEiT v2[[1]]({{< relref path="report.md#ref1">}}) is the latest SOTA mask modeling method published in 2022. It proposed the VQ-KD(vector-quantized knowledge distillation) method, which discretizes a continuous semantic space that supervises masked image modeling rather than relying on image pixels. This approach highly promoted the accuracy of semantic segmentation compared. The previous method that Lee et al.[[3]]({{< relref path="report.md#ref3">}}) used addressed semantic segmentation by incorporating high-order relations and mixture of label contexts into MRF[[7]]({{< relref path="report.md#ref7">}}). They solved MRF by proposing a Convolutional Neural Network, which enables deterministic end-to-end computation in a single forward pass.
 
 ***Knowledge distillation***
-Knowledge distillation[[2]]({{< relref path="report.md#ref2">}}) refers to transferring knowledge from a large, heavy model to a smaller model that can be practically deployed under real-world constraints. In other words, a small "student" model learns to mimic a "teacher" model and leverage the teacher's knowledge to obtain similar or even higher accuracy.
+    Knowledge distillation[[2]]({{< relref path="report.md#ref2">}}) refers to transferring knowledge from a large, heavy model to a smaller model that can be practically deployed under real-world constraints. In other words, a small "student" model learns to mimic a "teacher" model and leverage the teacher's knowledge to obtain similar or even higher accuracy.
 
 ## 3. Methodology
 
@@ -150,3 +149,5 @@ In the future, encoder and decoder in the Color Transfer Network with different 
 ##### [5] Vladimir Bychkovsky, Sylvain Paris, Eric Chan, and Fr ́edo Durand. ***Learning photographic global tonal adjustment with a database of input / output image pairs.*** In The Twenty-Fourth IEEE Conference on Computer Vision and Pattern Recognition, 2011. {#ref5}
 
 ##### [6] Diederik P Kingma and Jimmy Ba. ***Adam: A method for stochastic optimization.*** arXiv preprint arXiv:1412.6980, 2014. {#ref6}
+
+##### [7] Ziwei Liu, Xiaoxiao Li, Ping Luo, Chen Change Loy, and Xiaoou Tang. ***Deep learning markov random field for semantic segmentation.*** IEEE transactions on pattern analysis and machine intelligence, 40(8):1814–1828, 2017. {#ref7}
