@@ -103,7 +103,7 @@
     
     
     "mainEntityOfPage": "true",
-    "wordCount": "2321"
+    "wordCount": "2346"
   }]
   </script>
 
@@ -583,7 +583,7 @@
 <div class="flex flex-row flex-wrap items-center">
   
   
-  <time datetime="2022-12-05 00:00:00 &#43;0000 UTC">5 December 2022</time><span class="px-2 text-primary-500">&middot;</span><span>2321 words</span><span class="px-2 text-primary-500">&middot;</span><span title="Reading time">11 mins</span>
+  <time datetime="2022-12-05 00:00:00 &#43;0000 UTC">5 December 2022</time><span class="px-2 text-primary-500">&middot;</span><span>2346 words</span><span class="px-2 text-primary-500">&middot;</span><span title="Reading time">12 mins</span>
   
 
   
@@ -638,7 +638,8 @@
         <li><a href="#52-loss-analysis">5.2 Loss analysis</a></li>
       </ul>
     </li>
-    <li><a href="#6-summary">6. Summary</a>
+    <li><a href="#6-summary">6. Summary</a></li>
+    <li><a href="#7-statement-of-contributions">7. Statement of contributions</a>
       <ul>
         <li>
           <ul>
@@ -687,7 +688,8 @@
         <li><a href="#52-loss-analysis">5.2 Loss analysis</a></li>
       </ul>
     </li>
-    <li><a href="#6-summary">6. Summary</a>
+    <li><a href="#6-summary">6. Summary</a></li>
+    <li><a href="#7-statement-of-contributions">7. Statement of contributions</a>
       <ul>
         <li>
           <ul>
@@ -1036,6 +1038,15 @@ $$</p>
     [3]</a> and utilized knowledge distillation to get a smaller model with similar performance to the original one, significantly reducing the training time and increasing the maximum supported input resolution. For image pairs with similar semantic objects but different compositions, we switched to BEiT v2 for generating semantic labels and greatly improved the color transfer accuracy.</p>
 <p>Our model can produce excellent color transfer results for image pairs with different levels of content relevance. However, although we applied the SOTA segmentation model, the semantic labels are still not accurate enough when the contents are complex, leading to unsatisfying results. The general model without using semantic labels got more natural results in these cases.</p>
 <p>In the future, encoder and decoder in the Color Transfer Network with different structures, e.g. transformers, can be tried. The structure of the Color Transfer Network can also be redesigned to support high-resolution input and output better.</p>
+<div id="7-statement-of-contributions" class="anchor">7. Statement of contributions></div>
+<h2 class="relative group">7. Statement of contributions 
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#7-statement-of-contributions" aria-label="Anchor">#</a></span>        
+    
+</h2><p><strong>Weipeng Zhang:</strong> code, dataset preparation, model training, presentation, report.</p>
+<p><strong>Yubing Gou:</strong> model testing and analysis, report.</p>
 <hr>
 <div id="ref1" class="anchor">[1] Zhiliang Peng, Li Dong, Hangbo Bao, Qixiang Ye, and Furu Wei. <em><strong>Beit v2: Masked image modeling with vector-quantized visual tokenizers.</strong></em> arXiv preprint arXiv:2208.06366, 2022. ></div>
 <h5 class="relative group">[1] Zhiliang Peng, Li Dong, Hangbo Bao, Qixiang Ye, and Furu Wei. <em><strong>Beit v2: Masked image modeling with vector-quantized visual tokenizers.</strong></em> arXiv preprint arXiv:2208.06366, 2022.  
