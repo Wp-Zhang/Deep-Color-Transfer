@@ -13,7 +13,7 @@
       <pubDate>Mon, 05 Dec 2022 00:00:00 +0000</pubDate>
       
       <guid>https://wp-zhang.github.io/Deep-Color-Transfer/posts/report/</guid>
-      <description>Introduction # In this project, we are trying to build a deep-learning model for color transfer between images. Unlike style transfer which will modify objects in the image, color transfer focuses on transferring the color characteristics from the reference image to the input image while keeping the objects unchanged.</description>
+      <description>Deep color transfer is an approach to extracting the histogram containing color information from the source and the reference image, then transferring the color between the image pair based on the histogram using a deep neural network.</description>
     </item>
     
     <item>
@@ -22,7 +22,7 @@
       <pubDate>Sun, 23 Oct 2022 00:00:00 +0000</pubDate>
       
       <guid>https://wp-zhang.github.io/Deep-Color-Transfer/posts/progress/</guid>
-      <description>Conceptual Review # The authors of Deep Color Transfer Using Histogram Analogy [1] proposed a deep learning framework that leverages color histogram analogy for color transfer between source and reference images.</description>
+      <description>Conceptual Review&gt; Conceptual Review # The authors of Deep Color Transfer Using Histogram Analogy [1] proposed a deep learning framework that leverages color histogram analogy for color transfer between source and reference images.</description>
     </item>
     
     <item>
