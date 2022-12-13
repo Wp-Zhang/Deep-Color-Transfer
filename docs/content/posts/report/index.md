@@ -135,7 +135,7 @@ In the future, encoder and decoder in the Color Transfer Network with different 
 
 **Weipeng Zhang:** code, dataset preparation, model training, presentation, report.
 
-**Yubing Gou:** model testing and analysis, report.
+**Yubing Gou:** dataset preparation, model testing and analysis, report.
 
 ---
 
