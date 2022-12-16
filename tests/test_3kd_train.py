@@ -65,10 +65,7 @@ def test_kd_train():
         parameter.requires_grad = False
 
     wandb_logger = WandbLogger(project="Deep Color Transform Distill", name="test")
-    try:
-        wandb_logger.experiment.config.update(cfg.to_dict())
-    except:
-        pass
+    wandb_logger.experiment.config.update(cfg.to_dict(), allow_val_change=True)
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=trainer_args.ckpt_dir,
@@ -92,7 +89,8 @@ def test_kd_train():
     )
 
     trainer.fit(model, dm)
-    m = KDModel.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)
-    torch.save(m.model.state_dict(), "tests/student.pt")
+    state_dict = torch.load(trainer.checkpoint_callback.best_model_path)
+    model.load_state_dict(state_dict["state_dict"])
+    torch.save(model.model.state_dict(), "tests/student.pt")
 
     os.remove("tests/test_data/raw/dataset_info.csv")

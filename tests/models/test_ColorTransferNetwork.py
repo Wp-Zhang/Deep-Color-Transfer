@@ -17,9 +17,9 @@ def test_CTN():
     hist_enc1 = torch.randn((2, 8, 64, 64))
     hist_enc2 = torch.randn((2, 8, 64, 64))
 
-    out = model(img, hist_enc1, hist_enc2)
+    _ = model(img, hist_enc1, hist_enc2)
 
-    model2 = get_CTN(
+    _ = get_CTN(
         in_channels=3,
         out_channels=3,
         hist_channels=64,

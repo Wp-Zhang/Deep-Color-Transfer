@@ -27,7 +27,7 @@ class Adobe5kDataset(Dataset):
         num_classes: int,
         if_aug: bool = True,
     ):
-        super(Dataset, self).__init__()
+        super().__init__()
 
         self.info = dataset_info
         self.img_dim = img_dim
@@ -157,7 +157,7 @@ class TestDataset(Dataset):
         use_seg: bool,
         resize_dim: int = None,
     ):
-        super(Dataset, self).__init__()
+        super().__init__()
 
         self.data_dir = Path(data_dir)
         self.resize_dim = resize_dim

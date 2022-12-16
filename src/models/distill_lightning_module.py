@@ -33,7 +33,7 @@ class Model(pl.LightningModule):
     ):
         """Pytorch-lightning module for training with knowledge distillation."""
         super(Model, self).__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=["teacher"])
 
         # * --------------------- Define model --------------------
         self.teacher = teacher

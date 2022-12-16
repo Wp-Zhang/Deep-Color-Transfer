@@ -10,14 +10,14 @@ def test_adobe5k_dataset():
     trainset = Adobe5kDataset(info, "tests/test_data/raw", (256, 256), 64, 64, 150)
     data = trainset[0]
     assert len(data) == 7
-    size = len(trainset)
+    _ = len(trainset)
 
     trainset = Adobe5kDataset(
         info, "tests/test_data/raw", (256, 256), 64, 64, 150, False
     )
     data = trainset[0]
     assert len(data) == 7
-    size = len(trainset)
+    _ = len(trainset)
     os.remove("tests/test_data/raw/dataset_info.csv")
 
 
@@ -25,9 +25,9 @@ def test_test_dataset():
     testset = TestDataset("tests/test_data/test", 64, 64, 150, True, 512)
     data = testset[0]
     assert len(data) == 6
-    size = len(testset)
+    _ = len(testset)
 
     testset = TestDataset("tests/test_data/test", 64, 64, 150, False, 512)
     data = testset[0]
     assert len(data) == 6
-    size = len(testset)
+    _ = len(testset)

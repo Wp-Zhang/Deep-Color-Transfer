@@ -41,10 +41,7 @@ def test_train():
     )
 
     wandb_logger = WandbLogger(project="Deep Color Transform Test", name="test")
-    try:
-        wandb_logger.experiment.config.update(cfg.to_dict())
-    except:
-        pass
+    wandb_logger.experiment.config.update(cfg.to_dict())
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=trainer_args.ckpt_dir,
