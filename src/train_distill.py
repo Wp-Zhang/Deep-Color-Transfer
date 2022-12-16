@@ -10,7 +10,7 @@ import torch
 sys.path.append("./")
 warnings.filterwarnings("ignore")
 
-from src.models import Model, KDModel
+from src.models import DeepColorTransfer, KDModel
 from src.data import Adobe5kDataModule
 
 if __name__ == "__main__":
@@ -56,19 +56,18 @@ if __name__ == "__main__":
         batch_size=dataset_args.batch_size,
         num_workers=dataset_args.num_workers,
     )
-    teacher = Model(
+    teacher = DeepColorTransfer(
         l_bin=dataset_args2.l_bin,
         ab_bin=dataset_args2.ab_bin,
         num_classes=dataset_args2.num_classes,
         **model_args2,
-        **optimizer_args2,
     )
     teacher.load_state_dict(teacher_weights)
     for parameter in teacher.parameters():
         parameter.requires_grad = False
 
     model = KDModel(
-        teacher=teacher.model,
+        teacher=teacher,
         soft_loss_weight=0.5,
         l_bin=dataset_args.l_bin,
         ab_bin=dataset_args.ab_bin,
@@ -76,7 +75,7 @@ if __name__ == "__main__":
         **model_args,
         **optimizer_args,
     )
-    model.model.HEN = teacher.model.HEN
+    model.model.HEN = teacher.HEN
     for parameter in model.model.HEN.parameters():
         parameter.requires_grad = False
 
@@ -108,3 +107,5 @@ if __name__ == "__main__":
     )
 
     trainer.fit(model, dm)
+    m = KDModel.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)
+    torch.save(m.model.state_dict(), trainer_args.ckpt_dir + "/best.pt")
