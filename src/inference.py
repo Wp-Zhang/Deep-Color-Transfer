@@ -19,11 +19,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_config",
         default="configs/DeepColorTransfer.yaml",
-        help="path to the configuration file",
+        help="path to the model config file",
     )
     parser.add_argument(
         "--test_config",
-        help="Test data dir",
+        default="configs/test.yaml",
+        help="path to the test config file",
     )
     args = parser.parse_args()
 
