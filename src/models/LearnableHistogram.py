@@ -16,8 +16,8 @@ class LearnableHistogram(nn.Module):
         self.LHConv_1.bias.requires_grad = False
         self.LHConv_1.weight.requires_grad = False
 
-    def forward(self, input):
-        a1 = self.LHConv_1(input)
+    def forward(self, inputs):
+        a1 = self.LHConv_1(inputs)
         a2 = torch.abs(a1)
         a3 = 1 - a2 * (self.bin_num - 1)
         a4 = self.relu(a3)
@@ -45,12 +45,12 @@ def get_histogram2d(tensor: torch.Tensor, model: LearnableHistogram) -> torch.Te
 
     # Network
     dim = hist_a.size()[2]
-    bin = model.bin_num
-    tensor1 = hist_a.repeat(1, bin, 1, 1)
-    tensor2 = hist_b.repeat(1, 1, bin, 1).view(-1, bin * bin, dim, dim)
+    b = model.bin_num
+    tensor1 = hist_a.repeat(1, b, 1, 1)
+    tensor2 = hist_b.repeat(1, 1, b, 1).view(-1, b * b, dim, dim)
 
     pool = nn.AvgPool2d(dim)
     hist2d = pool(tensor1 * tensor2)
-    hist2d = hist2d.view(-1, 1, bin, bin)
+    hist2d = hist2d.view(-1, 1, b, b)
 
     return hist2d

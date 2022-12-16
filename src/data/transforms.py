@@ -1,10 +1,10 @@
 # * Some code adopted from https://github.com/codeslake/Color_Transfer_Histogram_Analogy/blob/master/data/base_dataset.py
 
+import random
 import torch
 import torchvision.transforms as T
 import numpy as np
 from skimage import color
-import random
 
 
 A = 86.1830297444

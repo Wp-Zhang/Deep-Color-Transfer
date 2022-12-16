@@ -1,10 +1,8 @@
 from typing import List
 import torch
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
 from timm import create_model
-
-from typing import List
 from ..util import init_weights
 
 # * ============================== Modules ==============================
@@ -57,10 +55,10 @@ class UNetEncoder(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, input):
+    def forward(self, x):
         out = []
-        tmp_out = input
-        for i, layer in enumerate(self.enc):
+        tmp_out = x
+        for layer in self.enc:
             # (b, hidden_(i-1), h/2^i, w/2^i) -> (b, hidden_i, h/2^(i+1), w/2^(i+1))
             tmp_out = layer(tmp_out)
             out.append(tmp_out)
@@ -222,8 +220,8 @@ class ColorTransferNetwork(nn.Module):
         in_channels: int,
         out_channels: int,
         hist_channels: int,
-        enc_hidden_list: List[int] = [64, 128, 256, 512, 512],
-        dec_hidden_list: List[int] = [512, 256, 128, 64, 64],
+        enc_hidden_list: List[int],
+        dec_hidden_list: List[int],
         use_dropout: bool = False,
         encoder: str = "Original",
     ):
@@ -236,10 +234,14 @@ class ColorTransferNetwork(nn.Module):
             Number of output channels
         hist_channels : int
             Number of HEN output channels
-        enc_hidden : int
-            Number of hidden channels for U-Net encoder, by default 64
+        enc_hidden_list : List[int]
+            Number of hidden channels for U-Net encoder
+        dec_hidden_list : List[int]
+            Number of hidden channels for U-Net decoder
         use_dropout : bool, optional
             If use dropout, by default False
+        encoder : str, optional
+            Encoder type, by default "Original"
         """
         super(ColorTransferNetwork, self).__init__()
 
@@ -374,8 +376,8 @@ def get_CTN(
     out_channels: int,
     hist_channels: int,
     encoder_name: str,
-    enc_hidden_list: List[int] = [64, 128, 256, 512, 512],
-    dec_hidden_list: List[int] = [512, 256, 128, 64, 64],
+    enc_hidden_list: List[int],
+    dec_hidden_list: List[int],
     use_dropout=False,
     init_method="Normal",
 ) -> ColorTransferNetwork:
@@ -390,9 +392,9 @@ def get_CTN(
     hist_channels : int
         Number of HEN output channels
     enc_hidden_list : List[int]
-        Number of hidden channels for U-Net encoder, by default [64, 128, 256, 512, 512]
+        Number of hidden channels for U-Net encoder
     dec_hidden_list : List[int]
-        Number of hidden channels for U-Net decoder, by default [512, 256, 128, 64, 64]
+        Number of hidden channels for U-Net decoder
     use_dropout : bool, optional
         If use dropout, by default False.
     init_method : str, optional
@@ -412,7 +414,7 @@ def get_CTN(
         use_dropout,
         encoder_name,
     )
-    init_weights(model, type=init_method)
+    init_weights(model, method=init_method)
     if encoder_name != "Original":
         model.UNetEnc = create_model(encoder_name, pretrained=True, features_only=True)
 

@@ -140,7 +140,7 @@ class DeepColorTransfer(nn.Module):
     ):
         assert in_img.size(0) == 1, "Inference only supports batchsize of 1"
         # * Get basic info
-        batch_size, _, in_w, in_h = in_img.size()
+        _, _, in_w, in_h = in_img.size()
         ref_w, ref_h = ref_img.size()[2:]
 
         # * ========================= HEN =========================

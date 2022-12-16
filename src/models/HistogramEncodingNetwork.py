@@ -46,8 +46,8 @@ class HistogramEncodingNetwork(nn.Module):
 
         self.fc = nn.Sequential(nn.Linear(out_channels, out_channels))
 
-    def forward(self, input):
-        x = self.conv(input)
+    def forward(self, inputs):
+        x = self.conv(inputs)
         x = self.fc(x)  # (batch_size, 64)
         out = x[..., None, None]  # (batch_size, 64, 1, 1)
 
@@ -79,6 +79,6 @@ def get_HEN(
         An HEN
     """
     model = HistogramEncodingNetwork(in_channels, out_channels, hidden)
-    init_weights(model, type=init_method)
+    init_weights(model, method=init_method)
 
     return model
