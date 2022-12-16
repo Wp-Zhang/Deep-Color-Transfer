@@ -1,13 +1,20 @@
 from src.data import Adobe5kDataModule, TestDataModule
+from src.data.preprocessing import get_dataset_info
+import os
 
 
 def test_adobe5k_data_module():
-    dm = Adobe5kDataModule("tests/test_data/processed", 64, 64, 150, batch_size=2)
+    get_dataset_info(raw_dir="tests/test_data/raw")
+    dm = Adobe5kDataModule("tests/test_data/raw", (256, 256), 64, 64, 150, batch_size=2)
 
-    dm.setup()
+    dm.setup("fit")
+    dm.setup("validate")
     trainset = dm.train_dataloader()
     validset = dm.val_dataloader()
+    os.remove("tests/test_data/raw/dataset_info.csv")
 
 
 def test_test_data_module():
-    dm = TestDataModule("tests/test_data/test", 64, 64, 150, batch_size=2)
+    dm = TestDataModule("tests/test_data/test", 64, 64, 150, True, resize_dim=512)
+    dm.setup("predict")
+    dataset = dm.predict_dataloader()

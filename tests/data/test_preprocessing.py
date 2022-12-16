@@ -6,7 +6,7 @@ from src.data.preprocessing import (
     get_segwise_hist,
     one_hot,
     get_common_seg_map,
-    process_trainset,
+    get_dataset_info,
 )
 import os
 
@@ -16,7 +16,7 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "True"  # * Solve multiprocessing error
 def test_get_histogram():
     h, w = 128, 256
     l_bin, ab_bin = 64, 64
-    img = np.random.randint(0, 256, size=(3, h, w))
+    img = np.random.randn(3, h, w)
     hist = get_histogram(img, l_bin, ab_bin)
     assert hist.shape == (l_bin + 1, ab_bin, ab_bin)
 
@@ -26,7 +26,7 @@ def test_get_segwise_hist():
     num_classes = 12
     l_bin, ab_bin = 64, 64
     seg = np.random.randint(0, num_classes - 1, size=(h, w))
-    img = np.random.randint(0, 256, size=(3, h, w))
+    img = np.random.randn(3, h, w)
     hist = get_segwise_hist(img, l_bin, ab_bin, seg, num_classes)
     assert hist.shape == (num_classes, l_bin + 1, ab_bin, ab_bin)
 
@@ -60,12 +60,6 @@ def test_get_common_seg_map():
 
 
 def test_dataset_preprocessing():
-    process_trainset(
-        raw_dir="tests/test_data/raw",
-        processed_dir=f"tests/test_data/processed",
-        resize_dim=(512, 512),
-        l_bin=64,
-        ab_bin=64,
-        n_jobs=1,
-    )
+    get_dataset_info(raw_dir="tests/test_data/raw")
+    os.remove("tests/test_data/raw/dataset_info.csv")
     # shutil.rmtree(f"./data/processed_{folder_name}")
