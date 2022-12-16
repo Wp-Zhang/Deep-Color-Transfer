@@ -74,6 +74,13 @@ You can also specify your own config file by adding `--config PATH_TO_CONFIG` an
 
 ## Model Inference
 
+Pre-trained weights:
+
+| Model Config | Link |
+|--------------|------|
+| `configs/DeepColorTransfer.yaml` | [Google Drive](https://drive.google.com/file/d/1Q2UeXFE-JDJncu_41Cx2BLnzj7WODe8g/view?usp=share_link) |
+| `configs/DeepColorTransferSmall.yaml` | [Google Drive](https://drive.google.com/file/d/1NWMrPZvqZJH7i-z0k7Fc1UK_pZE1-udr/view?usp=share_link) |
+
 You can put the test data anywhere you want, but the folder structure should be like this:
 
        data
