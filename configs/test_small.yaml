@@ -1,6 +1,6 @@
 accelerator: cpu # gpu
 devices: 1
 use_seg: true
-model_path: original.pt
+model_path: small.pt
 test_dir: tests/test_data/test
-resize_dim: 512 # Null
+resize_dim: 1024 # Null

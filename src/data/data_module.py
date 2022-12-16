@@ -155,7 +155,9 @@ class TestDataModule(LightningDataModule):
         self.ab_bin = ab_bin
         self.num_classes = num_classes
         self.use_seg = use_seg
-        self.resize_dim = int(resize_dim)
+        if resize_dim is not None:
+            resize_dim = int(resize_dim)
+        self.resize_dim = resize_dim
 
     def setup(self, stage) -> None:
         if stage == "predict" or stage is None:
