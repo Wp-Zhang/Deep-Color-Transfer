@@ -1,6 +1,6 @@
 # ![logo](docs/assets/img/front-logo.png)
 
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/8e5c795af21f4f899f03095424f31179)](https://www.codacy.com/gh/Wp-Zhang/Deep-Color-Transfer/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Wp-Zhang/Deep-Color-Transfer&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/8e5c795af21f4f899f03095424f31179)](https://www.codacy.com/gh/Wp-Zhang/Deep-Color-Transfer/dashboard?utm_source=github.com&utm_medium=referral&utm_content=Wp-Zhang/Deep-Color-Transfer&utm_campaign=Badge_Grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/8e5c795af21f4f899f03095424f31179)](https://www.codacy.com/gh/Wp-Zhang/Deep-Color-Transfer/dashboard?utm_source=github.com&utm_medium=referral&utm_content=Wp-Zhang/Deep-Color-Transfer&utm_campaign=Badge_Coverage)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
@@ -31,36 +31,34 @@ Color transfer between images based on deep learning.
 
 ## Environment setup
 
-1. Install required packages by `pip install -r requirements.txt`
-2. We used Weights & Biases to do experiment tracking, you can install it by `pip install wandb`
-3. Init Weights & Biases by `wandb init`
+1.  Install required packages by `pip install -r requirements.txt`
+2.  We used Weights & Biases to do experiment tracking, you can install it by `pip install wandb`
+3.  Init Weights & Biases by `wandb init`
 
 ## Prepare dataset
 
 We've uploaded the datasets to Kaggle: [MIT-Adobe 5K Dataset](https://www.kaggle.com/datasets/weipengzhang/adobe-fivek), [Segmentation Results](https://www.kaggle.com/datasets/weipengzhang/beit2-adobe5k).
 
-1. Download these two datasets and extract them to `data/raw`, the data folder structure should be like this:
+1.  Download these two datasets and extract them to `data/raw`, the data folder structure should be like this:
 
-   ```
-   data
-   └── raw
-      ├── adobe_5k
-      │   ├── a
-      │   ├── b
-      │   ├── c
-      │   ├── d
-      │   ├── e
-      │   └── raw
-      └── segs
-   ```
+        data
+        └── raw
+           ├── adobe_5k
+           │   ├── a
+           │   ├── b
+           │   ├── c
+           │   ├── d
+           │   ├── e
+           │   └── raw
+           └── segs
 
-2. In the project root folder, use the provided script to prepare trainset
+2.  In the project root folder, use the provided script to prepare trainset
 
-   ```shell
-   python src/prepare_dataset.py
-   ```
+    ```shell
+    python src/prepare_dataset.py
+    ```
 
-   The script will use the default config file. However, you can specify your own config file by adding `--config PATH_TO_CONFIG`
+    The script will use the default config file. However, you can specify your own config file by adding `--config PATH_TO_CONFIG`
 
 ## Train the model
 
@@ -70,19 +68,17 @@ In the project root folder, run the following
 python src/train.py
 ```
 
-You can also specify your own config file by adding `--config PATH_TO_CONFIG` and change the *[Weights&Biases](https://wandb.ai/)* runner name by adding `--name NEW_NAME`.
+You can also specify your own config file by adding `--config PATH_TO_CONFIG` and change the _[Weights&Biases](https://wandb.ai/)_ runner name by adding `--name NEW_NAME`.
 
 ## Model Inference
 
 You can put the test data anywhere you want, but the folder structure should be like this:
 
-```
-   data
-   ├── in_imgs   <- Input images in .jpg format
-   ├── in_segs   <- Segmentation results of input images in .npy format
-   ├── ref_imgs  <- Reference images in .jpg format
-   └── ref_segs  <- Segmentation results of reference images in .npy format
-```
+       data
+       ├── in_imgs   <- Input images in .jpg format
+       ├── in_segs   <- Segmentation results of input images in .npy format
+       ├── ref_imgs  <- Reference images in .jpg format
+       └── ref_segs  <- Segmentation results of reference images in .npy format
 
 In the project root folder, run the following
 
@@ -116,9 +112,3 @@ python src/train_distill.py --config PATH_TO_CONFIG --teacher-weights PATH_TO_TE
 **Weipeng Zhang:** code, dataset preparation, model training, presentation, report, website.
 
 **Yubing Gou:** dataset preparation, model testing and analysis, report.
-
-## TODO
-
-- [ ] Add unit tests
-- [ ] Upload pre-trained weights
-- [ ] Update docstrings
