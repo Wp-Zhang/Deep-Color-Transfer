@@ -88,9 +88,7 @@ In the project root folder, run the following
 python src/inference.py --model_config PATH_TO_MODEL_CONFIG --test_config PATH_TO_TEST_CONFIG
 ```
 
-If your images are too large and raise an out-of-memory error, or you want to speed up the inference process, you can resize the input images by adding `--resize_dim TARGET_DIM[int]`
-
-If you also want to pass the semantic segmentation results of the images to the model, you can add `--use_seg`
+`model_config` is `configs/DeepColorTransfer.yaml` by default and `test_config` is `configs/test.yaml` by default.
 
 The generated images will be saved under the test data folder.
 
