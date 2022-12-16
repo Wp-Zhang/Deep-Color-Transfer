@@ -10,8 +10,7 @@ import torch
 sys.path.append("./")
 warnings.filterwarnings("ignore")
 
-from src.models.distill_lightning_module import Model as DistillModel
-from src.models import Model
+from src.models import Model, KDModel
 from src.data import Adobe5kDataModule
 
 if __name__ == "__main__":
@@ -68,7 +67,7 @@ if __name__ == "__main__":
     for parameter in teacher.parameters():
         parameter.requires_grad = False
 
-    model = DistillModel(
+    model = KDModel(
         teacher=teacher.model,
         soft_loss_weight=0.5,
         l_bin=dataset_args.l_bin,
