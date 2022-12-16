@@ -9,12 +9,12 @@ def test_adobe5k_data_module():
 
     dm.setup("fit")
     dm.setup("validate")
-    trainset = dm.train_dataloader()
-    validset = dm.val_dataloader()
+    _ = dm.train_dataloader()
+    _ = dm.val_dataloader()
     os.remove("tests/test_data/raw/dataset_info.csv")
 
 
 def test_test_data_module():
     dm = TestDataModule("tests/test_data/test", 64, 64, 150, True, resize_dim=512)
     dm.setup("predict")
-    dataset = dm.predict_dataloader()
+    _ = dm.predict_dataloader()

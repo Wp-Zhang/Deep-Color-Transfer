@@ -18,4 +18,4 @@ def test_HUE_shift():
     img = Image.open("tests/test_data/test/in_imgs/1.jpg").convert("RGB")
     transform = t.get_transform_hueshiftlab()
 
-    hue_shift_img = transform(img)
+    _ = transform(img)

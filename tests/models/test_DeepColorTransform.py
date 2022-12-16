@@ -31,4 +31,4 @@ def test_DeepColorTransfer():
     ref_segwise_hist = torch.randn((b, num_seg_labels, l_bin + 1, ab_bin, ab_bin))
 
     x = in_img, in_hist, in_common_seg, ref_img, ref_hist, ref_segwise_hist
-    out = model(*x)
+    _ = model(*x)

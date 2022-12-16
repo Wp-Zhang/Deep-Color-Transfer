@@ -1,6 +1,5 @@
-import torch
+import os
 import numpy as np
-import random
 from src.data.preprocessing import (
     get_histogram,
     get_segwise_hist,
@@ -8,7 +7,6 @@ from src.data.preprocessing import (
     get_common_seg_map,
     get_dataset_info,
 )
-import os
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"  # * Solve multiprocessing error
 

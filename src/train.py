@@ -54,10 +54,7 @@ if __name__ == "__main__":
     )
 
     wandb_logger = WandbLogger(project="Deep Color Transform", name=args.name)
-    try:
-        wandb_logger.experiment.config.update(cfg.to_dict())
-    except:
-        pass
+    wandb_logger.experiment.config.update(cfg.to_dict())
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=trainer_args.ckpt_dir,
