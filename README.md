@@ -4,7 +4,9 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/8e5c795af21f4f899f03095424f31179)](https://www.codacy.com/gh/Wp-Zhang/Deep-Color-Transfer/dashboard?utm_source=github.com&utm_medium=referral&utm_content=Wp-Zhang/Deep-Color-Transfer&utm_campaign=Badge_Coverage)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Color transfer between images based on deep learning.
+Deep learning based color transfer between images.
+
+![demo](docs/assets/img/showcase.png)
 
 ## Project Organization
 
