@@ -1,8 +1,8 @@
+from pathlib import Path
+from typing import Tuple, Union
 from torch.utils.data import DataLoader
 from pytorch_lightning import LightningDataModule
-from pathlib import Path
 import pandas as pd
-from typing import Tuple, Union
 from .dataset import Adobe5kDataset, TestDataset
 
 
@@ -46,6 +46,10 @@ class Adobe5kDataModule(LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.info = pd.read_csv(str(Path(trainset_dir) / "dataset_info.csv"))
+
+        self.adb5k_train = None
+        self.adb5k_val = None
+        self.adb5k_demo = None
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
@@ -159,7 +163,9 @@ class TestDataModule(LightningDataModule):
             resize_dim = int(resize_dim)
         self.resize_dim = resize_dim
 
-    def setup(self, stage) -> None:
+        self.dataset = None
+
+    def setup(self, stage=None):
         if stage == "predict" or stage is None:
             self.dataset = TestDataset(
                 self.test_dir,

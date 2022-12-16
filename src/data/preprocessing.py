@@ -1,6 +1,6 @@
+from pathlib import Path
 import pandas as pd
 import numpy as np
-from pathlib import Path
 
 
 def _get_ab_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
