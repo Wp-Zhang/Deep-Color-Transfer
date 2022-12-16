@@ -30,14 +30,8 @@ def _get_ab_hist(img: "np.ndarray", num_bin: int) -> "np.ndarray":
             arr1 = np.concatenate([arr1, np.array([0])])
 
     # AB space
-    try:
-        arr_new = [arr1, arr2]
-        H, _ = np.histogramdd(arr_new, bins=[num_bin, num_bin], range=((0, 1), (0, 1)))
-    except Exception as e:
-        print(e)
-        print(arr1.shape, arr2.shape)
-        arr_new = [arr1, arr2]
-        H, _ = np.histogramdd(arr_new, bins=[num_bin, num_bin], range=((0, 1), (0, 1)))
+    arr_new = [arr1, arr2]
+    H, _ = np.histogramdd(arr_new, bins=[num_bin, num_bin], range=((0, 1), (0, 1)))
 
     H = np.rot90(H)
     H = np.flip(H, 0)

@@ -11,6 +11,9 @@ wandb
 lightning_logs
 output/*
 
+**/*.ckpt
+**/*.pt
+
 **/__pycache__/
 notebooks/lightning_logs
 

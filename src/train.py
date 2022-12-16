@@ -1,3 +1,4 @@
+import torch
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
@@ -80,3 +81,6 @@ if __name__ == "__main__":
     )
 
     trainer.fit(model, dm)
+
+    m = Model.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)
+    torch.save(m.model.state_dict(), trainer_args.ckpt_dir + "/best.pt")

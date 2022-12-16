@@ -2,50 +2,26 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 from box import Box
-import sys
 import warnings
-import argparse
+import os
 import torch
 
-sys.path.append("./")
 warnings.filterwarnings("ignore")
 
-from src.models import DeepColorTransfer, KDModel
+from src.data.preprocessing import get_dataset_info
+from src.models import Model
 from src.data import Adobe5kDataModule
 
-if __name__ == "__main__":
-    # * Load config and dataset info
-    parser = argparse.ArgumentParser(
-        description="Train DCT model on specified dataset."
-    )
-    parser.add_argument(
-        "--config",
-        default="configs/DeepColorTransfer.yaml",
-        help="path to the configuration file",
-    )
-    parser.add_argument(
-        "--teacher-weights",
-        default=None,
-        help="Teacher weights path",
-    )
-    parser.add_argument(
-        "--name",
-        default=None,
-        help="W&B runner name",
-    )
-    args = parser.parse_args()
 
-    cfg = Box.from_yaml(open(args.config, "r").read())
+def test_train():
+    get_dataset_info("tests/test_data/raw")
+    cfg = Box.from_yaml(
+        open("tests/test_configs/DeepColorTransfer-test.yaml", "r").read()
+    )
     model_args = cfg.model_args
     optimizer_args = cfg.optimizer_args
     dataset_args = cfg.dataset_args
     trainer_args = cfg.trainer_args
-
-    cfg2 = Box.from_yaml(open("configs/DeepColorTransfer.yaml", "r").read())
-    model_args2 = cfg2.model_args
-    optimizer_args2 = cfg2.optimizer_args
-    dataset_args2 = cfg2.dataset_args
-    teacher_weights = torch.load(args.teacher_weights)
 
     dm = Adobe5kDataModule(
         trainset_dir=dataset_args.raw_dir,
@@ -56,30 +32,15 @@ if __name__ == "__main__":
         batch_size=dataset_args.batch_size,
         num_workers=dataset_args.num_workers,
     )
-    teacher = DeepColorTransfer(
-        l_bin=dataset_args2.l_bin,
-        ab_bin=dataset_args2.ab_bin,
-        num_classes=dataset_args2.num_classes,
-        **model_args2,
-    )
-    teacher.load_state_dict(teacher_weights)
-    for parameter in teacher.parameters():
-        parameter.requires_grad = False
-
-    model = KDModel(
-        teacher=teacher,
-        soft_loss_weight=0.5,
+    model = Model(
         l_bin=dataset_args.l_bin,
         ab_bin=dataset_args.ab_bin,
         num_classes=dataset_args.num_classes,
         **model_args,
         **optimizer_args,
     )
-    model.model.HEN = teacher.HEN
-    for parameter in model.model.HEN.parameters():
-        parameter.requires_grad = False
 
-    wandb_logger = WandbLogger(project="Deep Color Transform Distill", name=args.name)
+    wandb_logger = WandbLogger(project="Deep Color Transform Test", name="test")
     try:
         wandb_logger.experiment.config.update(cfg.to_dict())
     except:
@@ -107,5 +68,8 @@ if __name__ == "__main__":
     )
 
     trainer.fit(model, dm)
-    m = KDModel.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)
-    torch.save(m.model.state_dict(), trainer_args.ckpt_dir + "/best.pt")
+    os.remove("tests/test_data/raw/dataset_info.csv")
+
+    # * save weights only
+    m = Model.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)
+    torch.save(m.model.state_dict(), "tests/model.pt")

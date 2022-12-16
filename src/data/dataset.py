@@ -188,22 +188,34 @@ class TestDataset(Dataset):
         ref_img = Image.open(str(self.ref_img_paths[index])).convert("RGB")
 
         if self.use_seg:
-            in_seg = np.load(str(self.in_seg_paths[index]), allow_pickle=True)
-            ref_seg = np.load(str(self.ref_seg_paths[index]), allow_pickle=True)
+            in_seg = Image.fromarray(
+                np.load(str(self.in_seg_paths[index]), allow_pickle=True)
+            )
+            ref_seg = Image.fromarray(
+                np.load(str(self.ref_seg_paths[index]), allow_pickle=True)
+            )
 
-            in_img = in_img.resize(in_seg.shape[::-1])
-            ref_img = ref_img.resize(ref_seg.shape[::-1])
+            in_img = in_img.resize(in_seg.size)
+            ref_img = ref_img.resize(ref_seg.size)
 
-            in_seg = torch.from_numpy(in_seg)
-            ref_seg = torch.from_numpy(ref_seg)
+            if self.resize_dim is not None:
+                resize = T.Resize(
+                    self.resize_dim, interpolation=T.InterpolationMode.NEAREST
+                )
+                in_img = resize(in_img)
+                ref_img = resize(ref_img)
+                in_seg = resize(in_seg)
+                ref_seg = resize(ref_seg)
+
+            in_seg = torch.from_numpy(np.array(in_seg))
+            ref_seg = torch.from_numpy(np.array(ref_seg))
         else:
             if self.resize_dim is not None:
                 resize = T.Resize(self.resize_dim)
                 in_img = resize(in_img)
                 ref_img = resize(ref_img)
-            in_seg, ref_seg = np.array([0]), np.array([0])
-            in_seg = torch.from_numpy(in_seg)
-            ref_seg = torch.from_numpy(ref_seg)
+            in_seg = torch.from_numpy(np.array([0]))
+            ref_seg = torch.from_numpy(np.array([0]))
 
         in_img = self.lab_transform(in_img).float()
         ref_img = self.lab_transform(ref_img).float()
